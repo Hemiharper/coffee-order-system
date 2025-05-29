@@ -89,14 +89,12 @@ const OrderForm = ({ onOrder }) => {
   <option value="Latte">Latte</option>
   <option value="Cappuccino">Cappuccino</option>
 </Select>
-</Select>
 
         <Select>
   <option value="">Select an option</option>
   <option value="Espresso">Espresso</option>
   <option value="Latte">Latte</option>
   <option value="Cappuccino">Cappuccino</option>
-</Select>
 </Select>
 
         <Textarea
