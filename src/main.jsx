@@ -1,10 +1,8 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./pages";
-import "./index.css";
+import CoffeeOrderSystem from "./components/CoffeeOrderSystem";
 
+const isBarista = window.location.pathname === "/baristaview";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <App />
+    <CoffeeOrderSystem role={isBarista ? "barista" : "customer"} />
   </React.StrictMode>
 );
