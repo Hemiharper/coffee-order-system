@@ -1,12 +1,6 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import CoffeeOrderSystem from "./components/CoffeeOrderSystem";
-import "./index.css";
+import React from 'react';
+import CoffeeOrderSystem from './components/CoffeeOrderSystem.jsx';
 
-const isBarista = window.location.pathname === "/baristaview";
-
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <CoffeeOrderSystem role={isBarista ? "barista" : "customer"} />
-  </React.StrictMode>
-);
+export default function App() {
+  return <CoffeeOrderSystem />;
+}
