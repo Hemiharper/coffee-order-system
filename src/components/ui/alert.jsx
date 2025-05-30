@@ -1,9 +1,3 @@
-export const Alert = ({ children, className = "" }) => (
-  <div className={"bg-red-100 border border-red-500 text-red-700 px-4 py-3 rounded relative " + className}>
-    {children}
-  </div>
-);
-
-export const AlertDescription = ({ children }) => (
-  <p className="text-sm mt-1">{children}</p>
-);
+export default function Alert({ children }) {
+  return <div className="bg-red-100 text-red-700 border border-red-300 rounded p-3">{children}</div>;
+}
