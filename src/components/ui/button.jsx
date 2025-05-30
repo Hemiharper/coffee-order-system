@@ -1,18 +1,9 @@
-import * as React from "react";
-
-const Button = React.forwardRef(({ className = "", children, ...props }, ref) => {
+export default function Button({ children, onClick, disabled, variant }) {
+  const base = 'inline-flex items-center justify-center h-12 px-4 rounded text-white font-medium';
+  const styles = variant==='outline'
+    ? 'bg-transparent border border-blue-600 text-blue-600 hover:bg-blue-50'
+    : 'bg-blue-600 hover:bg-blue-700';
   return (
-    <button
-      ref={ref}
-      className={
-        "inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 " +
-        className
-      }
-      {...props}
-    >
-      {children}
-    </button>
+    <button onClick={onClick} disabled={disabled} className={`${base} ${styles} ${disabled?'opacity-50 cursor-not-allowed':''}`}>{children}</button>
   );
-});
-Button.displayName = "Button";
-export { Button };
+}
