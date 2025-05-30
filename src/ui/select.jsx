@@ -26,3 +26,5 @@ export function SelectItem({ value, children, className = '' }) {
 export function SelectValue({ placeholder, className = '' }) {
   return <span className={className + ' text-gray-700'}>{placeholder}</span>;
 }
+
+export default Select;
