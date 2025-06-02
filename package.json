@@ -7,10 +7,10 @@
     "build": "next build",
     "start": "next start"
   },
-  "dependencies": {
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest",
+   "dependencies": {
+    "next": "13.4.19",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
     "lucide-react": "^0.289.0"
   },
   "devDependencies": {
