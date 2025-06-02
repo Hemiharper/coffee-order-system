@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
-import { Coffee, Clock, Check, Package } from 'lucide-react';
+import { Coffee, Check } from 'lucide-react';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from './ui/select';
 import { Textarea } from './ui/textarea';
 import { Input } from './ui/input';
@@ -89,9 +89,7 @@ const CoffeeOrderSystem = ({ role = 'customer' }) => {
   }, []);
 
   const handleOrder = (orderDetails) => {
-    const newOrder = {
-      id: Date.now(), ...orderDetails, status: 'pending', timestamp: new Date().toLocaleTimeString()
-    };
+    const newOrder = { id: Date.now(), ...orderDetails, status: 'pending', timestamp: new Date().toLocaleTimeString() };
     const updated = [...orders, newOrder];
     setOrders(updated);
     saveOrdersToStorage(updated);
@@ -111,7 +109,7 @@ const CoffeeOrderSystem = ({ role = 'customer' }) => {
 
   const sorted = [...orders].sort((a, b) => {
     const rank = { pending: 1, ready: 2, collected: 3 };
-    return rank[a.status] - rank[b.status] || new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+    return rank[a.status] - rank[b.status] || 0;
   });
 
   return (
@@ -158,7 +156,7 @@ const CoffeeOrderSystem = ({ role = 'customer' }) => {
         </CardContent>
       </Card>
     </div>
-    );
+  );
 };
 
 export default CoffeeOrderSystem;
