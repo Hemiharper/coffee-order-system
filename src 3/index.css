@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom overrides (if any) */
+body {
+  @apply bg-blue-600;
+}
