@@ -34,4 +34,61 @@ const CustomerOrderStatus = ({ orders, onCancelOrder, onMarkCollected }) => {
                   </div>
                 </div>
                 
-                
+                <div className="flex flex-col items-start sm:items-end gap-3">
+                  {order.status === 'pending' && (
+                    <>
+                      <span className="flex items-center text-yellow-600 font-medium text-lg">
+                        <Clock className="w-5 h-5 mr-2" />
+                        Preparing...
+                      </span>
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={() => onCancelOrder(order.id)}
+                        className="bg-red-500 hover:bg-red-600"
+                      >
+                        <XCircle className="w-4 h-4 mr-2" />
+                        Cancel Order
+                      </Button>
+                    </>
+                  )}
+                  {order.status === 'ready' && (
+                    <div className="flex flex-col gap-3">
+                      <span className="flex items-center text-green-600 font-medium text-lg">
+                        <Check className="w-5 h-5 mr-2" />
+                        Ready for pickup!
+                      </span>
+                      <Button 
+                        onClick={() => onMarkCollected(order.id)}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <Check className="w-4 h-4 mr-2" />
+                        Got it
+                      </Button>
+                    </div>
+                  )}
+                  {order.status === 'collected' && (
+                    <span className="flex items-center text-blue-600 font-medium text-lg">
+                      <Package className="w-5 h-5 mr-2" />
+                      Collected
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+      
+      {orders.length === 0 && (
+        <div className="text-center py-16">
+          <Coffee className="w-20 h-20 mx-auto text-gray-300 mb-6" />
+          <p className="text-gray-500 text-lg font-medium">No orders yet</p>
+          <p className="text-gray-400 mt-2">Your orders will appear here once you place them</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default CustomerOrderStatus;
