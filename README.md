@@ -53,4 +53,13 @@ coffee-order-system/
 │   │   └── BaristaView.jsx      # Barista order management
 │   ├── globals.css              # Global styles
 │   ├── layout.js                # Root layout
-│   └── page.
+│   └── page.js
+├── lib/
+│   ├── utils.js
+│   └── store.js
+├── package.json
+├── tailwind.config.js
+├── next.config.js
+└── README.md
+```
+
