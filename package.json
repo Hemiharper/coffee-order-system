@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build && node scripts/optimize-css.js",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "optimize:css": "tailwindcss -i ./app/globals.css -o ./styles/globals.css --minify"
   },
   "dependencies": {
     "next": "14.0.0",
