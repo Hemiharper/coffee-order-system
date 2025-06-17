@@ -1,0 +1,9 @@
+/* Coffee themed colors */
+:root {
+  --coffee-brown: #6f4e37;
+}
+
+body.coffee-theme {
+  background-color: var(--coffee-brown);
+  color: #ffffff;
+}
