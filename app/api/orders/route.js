@@ -1,53 +1,143 @@
-import { NextResponse } from 'next/server';
-import { getOrders, addOrder, updateOrderStatus, deleteOrder } from '@/lib/store';
+// app/api/orders/route.js
 
-export async function GET() {
+import { NextResponse } from 'next/server'; // This is for App Router
+const Airtable = require('airtable');
+
+// Initialize Airtable with your API Key and Base ID from Vercel Environment Variables
+const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID);
+
+// Set CORS headers for security and cross-origin requests
+// In a production app, you would make Access-Control-Allow-Origin more restrictive
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+// Handle OPTIONS requests (required for CORS preflight)
+export async function OPTIONS(request) {
+  return NextResponse.json({}, { status: 200, headers: corsHeaders });
+}
+
+// Handle GET requests (Fetch all orders)
+export async function GET(request) {
   try {
-    const orders = getOrders();
-    return NextResponse.json(orders);
+    const records = await base('Orders').select({
+      sort: [{ field: "Order Timestamp", direction: "asc" }] // Get orders in chronological order
+    }).firstPage();
+
+    const orders = records.map(record => ({
+      id: record.id,
+      name: record.get('Name'),
+      coffeeType: record.get('Coffee Type'),
+      milkOption: record.get('Milk Option'),
+      notes: record.get('Notes'),
+      status: record.get('Status'),
+      orderTimestamp: record.get('Order Timestamp'),
+    }));
+
+    return NextResponse.json(orders, { status: 200, headers: corsHeaders });
+
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
+    console.error("Error fetching orders from Airtable:", error);
+    return NextResponse.json({ message: 'Failed to fetch orders', error: error.message }, { status: 500, headers: corsHeaders });
   }
 }
 
+// Handle POST requests (Create a new order)
 export async function POST(request) {
   try {
-    const orderData = await request.json();
-    const newOrder = addOrder(orderData);
-    return NextResponse.json(newOrder, { status: 201 });
+    const { name, coffeeType, milkOption, notes } = await request.json(); // Use request.json() for App Router
+
+    if (!name || !coffeeType || !milkOption) {
+      return NextResponse.json({ message: 'Missing required fields: name, coffeeType, milkOption' }, { status: 400, headers: corsHeaders });
+    }
+
+    const createdRecords = await base('Orders').create([
+      {
+        fields: {
+          'Name': name,
+          'Coffee Type': coffeeType,
+          'Milk Option': milkOption,
+          'Notes': notes || '', // Ensure notes is not undefined
+          'Status': 'Pending', // New orders start as Pending
+          'Order Timestamp': new Date().toISOString(), // Automatically set current time
+        }
+      }
+    ]);
+    const newOrder = createdRecords[0];
+
+    return NextResponse.json({
+      id: newOrder.id,
+      name: newOrder.get('Name'),
+      coffeeType: newOrder.get('Coffee Type'),
+      milkOption: newOrder.get('Milk Option'),
+      notes: newOrder.get('Notes'),
+      status: newOrder.get('Status'),
+      orderTimestamp: newOrder.get('Order Timestamp'),
+    }, { status: 201, headers: corsHeaders });
+
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
+    console.error("Error creating order in Airtable:", error);
+    return NextResponse.json({ message: 'Failed to create order', error: error.message }, { status: 500, headers: corsHeaders });
   }
 }
 
+// Handle PATCH requests (Update an existing order's status)
 export async function PATCH(request) {
   try {
-    const { orderId, status } = await request.json();
-    const updatedOrder = updateOrderStatus(orderId, status);
-    
-    if (!updatedOrder) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    const { id, status } = await request.json(); // Use request.json() for App Router
+
+    if (!id || !status) {
+      return NextResponse.json({ message: 'Missing required fields for update: id, status' }, { status: 400, headers: corsHeaders });
     }
-    
-    return NextResponse.json(updatedOrder);
+
+    const validStatuses = ['Pending', 'Ready', 'Collected'];
+    if (!validStatuses.includes(status)) {
+      return NextResponse.json({ message: 'Invalid status provided.' }, { status: 400, headers: corsHeaders });
+    }
+
+    const updatedRecords = await base('Orders').update([
+      {
+        id: id,
+        fields: {
+          'Status': status,
+        }
+      }
+    ]);
+    const updatedOrder = updatedRecords[0];
+
+    return NextResponse.json({
+      id: updatedOrder.id,
+      name: updatedOrder.get('Name'),
+      coffeeType: updatedOrder.get('Coffee Type'),
+      milkOption: updatedOrder.get('MilkOption'), // Corrected field name based on Airtable setup
+      notes: updatedOrder.get('Notes'),
+      status: updatedOrder.get('Status'),
+      orderTimestamp: updatedOrder.get('Order Timestamp'),
+    }, { status: 200, headers: corsHeaders });
+
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update order' }, { status: 500 });
+    console.error("Error updating order in Airtable:", error);
+    return NextResponse.json({ message: 'Failed to update order', error: error.message }, { status: 500, headers: corsHeaders });
   }
 }
 
+// Handle DELETE requests (Cancel an order)
 export async function DELETE(request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const orderId = searchParams.get('id');
-    
-    const deleted = deleteOrder(orderId);
-    
-    if (!deleted) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    const { searchParams } = new URL(request.url); // Get query parameters from request URL
+    const id = searchParams.get('id'); // 'id' will be passed as a query parameter (e.g., /api/orders?id=recXYZ)
+
+    if (!id) {
+      return NextResponse.json({ message: 'Missing order ID for deletion.' }, { status: 400, headers: corsHeaders });
     }
-    
-    return NextResponse.json({ success: true });
+
+    await base('Orders').destroy([id]);
+    return NextResponse.json({ message: 'Order successfully cancelled.' }, { status: 200, headers: corsHeaders });
+
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete order' }, { status: 500 });
+    console.error("Error deleting order from Airtable:", error);
+    return NextResponse.json({ message: 'Failed to cancel order', error: error.message }, { status: 500, headers: corsHeaders });
   }
 }
