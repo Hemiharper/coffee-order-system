@@ -49,4 +49,3 @@ npx shadcn-ui@latest init
 npx shadcn-ui@latest add button card input select tabs textarea alert
 
 ## Files to create/modify:
-

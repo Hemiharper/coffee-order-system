@@ -62,4 +62,3 @@ coffee-order-system/
 ├── next.config.js
 └── README.md
 ```
-

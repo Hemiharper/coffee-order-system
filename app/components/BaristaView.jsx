@@ -149,4 +149,3 @@ const BaristaView = ({ orders, onUpdateOrderStatus, backToCustomerLink }) => {
 };
 
 export default BaristaView;
-
