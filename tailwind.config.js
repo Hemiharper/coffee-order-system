@@ -18,6 +18,16 @@ module.exports = {
     },
     extend: {
       colors: {
+        coffee: {
+          light: '#d2b48c',
+          DEFAULT: '#9b5524',
+          dark: '#6b3e20',
+        },
+        status: {
+          pending: '#fbbf24',
+          ready: '#34d399',
+          collected: '#60a5fa',
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -66,12 +76,22 @@ module.exports = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        fade: {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        slide: {
+          from: { transform: "translateY(1rem)", opacity: "0" },
+          to: { transform: "translateY(0)", opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        fade: "fade 0.3s ease-in",
+        slide: "slide 0.3s ease-out",
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require('@tailwindcss/forms')],
 };
