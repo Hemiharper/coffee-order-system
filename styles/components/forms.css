@@ -1,0 +1,10 @@
+/* Global form element styles */
+.form-control {
+  margin-bottom: 1rem;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
