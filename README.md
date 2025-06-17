@@ -51,8 +51,6 @@ npm run build
 npm start
 ```
 
-You can also run `./setup.sh` to install dependencies and build in one step.
-
 ### 5. Run Tests
 
 ```bash

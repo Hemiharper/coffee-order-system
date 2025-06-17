@@ -7,7 +7,8 @@
     "build": "next build && node scripts/optimize-css.js",
     "start": "next start",
     "lint": "next lint",
-    "optimize:css": "tailwindcss -i ./app/globals.css -o ./styles/globals.css --minify"
+    "optimize:css": "tailwindcss -i ./app/globals.css -o ./styles/globals.css --minify",
+    "test": "jest"
   },
   "dependencies": {
     "next": "14.0.0",
@@ -17,6 +18,8 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "tailwind-merge": "^2.0.0",
+    "@tailwindcss/forms": "^0.5.3",
+    "tailwindcss-animate": "^1.0.0",
     "@radix-ui/react-select": "^1.0.0",
     "@radix-ui/react-tabs": "^1.0.0"
   },
@@ -29,6 +32,8 @@
     "eslint-config-next": "14.0.0",
     "postcss": "^8",
     "tailwindcss": "^3",
-    "typescript": "^5"
+    "typescript": "^5",
+    "jest": "^29.7.0",
+    "babel-jest": "^29.7.0"
   }
 }
