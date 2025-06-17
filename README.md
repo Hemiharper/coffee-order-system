@@ -43,10 +43,15 @@ npm run optimize:css
 
 ### 4. Build for Production
 
+Ensure dependencies are installed before building:
+
 ```bash
+npm install   # or `npm ci`
 npm run build
 npm start
 ```
+
+You can also run `./setup.sh` to install dependencies and build in one step.
 
 ## Project Structure
 
