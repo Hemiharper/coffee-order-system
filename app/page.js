@@ -1,3 +1,5 @@
+// app/page.js (Customer View - MODIFIED)
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -6,40 +8,53 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/app/components/ui/ca
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
 import { Coffee, Clock, Eye } from 'lucide-react';
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
-import OrderForm from '@/app/components/OrderForm';
-import CustomerOrderStatus from '@/app/components/CustomerOrderStatus';
+import OrderForm from '@/app/components/OrderForm'; // Your existing OrderForm component
+import CustomerOrderStatus from '@/app/components/CustomerOrderStatus'; // Your existing CustomerOrderStatus component
 import Link from 'next/link';
 
 export default function HomePage() {
   const [orders, setOrders] = useState([]);
   const [customerTab, setCustomerTab] = useState('order');
   const [showCancelAlert, setShowCancelAlert] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // New state for loading indicator
+  const [error, setError] = useState(null); // New state for general errors
 
   // Fetch orders from API
   const fetchOrders = async () => {
+    setIsLoading(true); // Start loading
+    setError(null); // Clear previous errors
     try {
       const response = await fetch('/api/orders');
-      if (response.ok) {
-        const data = await response.json();
-        setOrders(data);
+      if (!response.ok) {
+        const errorData = await response.json(); // Try to get error message from response body
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
-    } catch (error) {
-      console.error('Failed to fetch orders:', error);
+      const data = await response.json();
+      // Sort orders by timestamp, newest first for display
+      const sortedOrders = data.sort((a, b) => new Date(b.orderTimestamp) - new Date(a.orderTimestamp));
+      setOrders(sortedOrders);
+    } catch (err) {
+      console.error('Failed to fetch orders:', err);
+      setError(`Failed to load orders: ${err.message}. Please refresh.`); // Set a user-friendly error message
+    } finally {
+      setIsLoading(false); // End loading
     }
   };
 
   // Load orders and set up polling
   useEffect(() => {
     fetchOrders();
-    
+
     const interval = setInterval(() => {
       fetchOrders();
-    }, 2000);
+    }, 5000); // Poll every 5 seconds (5000 milliseconds)
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => clearInterval(interval); // Cleanup on component unmount
+  }, []); // Empty dependency array means this runs once on mount
 
   const handleOrder = async (orderDetails) => {
+    setIsLoading(true);
+    setError(null);
     try {
       const response = await fetch('/api/orders', {
         method: 'POST',
@@ -48,61 +63,56 @@ export default function HomePage() {
         },
         body: JSON.stringify(orderDetails),
       });
-      
+
       if (response.ok) {
-        fetchOrders(); // Refresh orders
+        await fetchOrders(); // Refresh orders after a successful submission
         setCustomerTab('status'); // Switch to status view
+        setShowCancelAlert(false); // Hide any old cancel alerts
+        // Optionally, show a success alert here for placing order
       } else {
-        alert('Failed to place order');
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to place order: HTTP status ${response.status}`);
       }
-    } catch (error) {
-      console.error('Failed to place order:', error);
-      alert('Failed to place order');
+    } catch (err) {
+      console.error('Failed to place order:', err);
+      setError(`Failed to place order: ${err.message}`);
+      alert(`Failed to place order: ${err.message}`); // Use alert for immediate feedback
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const cancelOrder = async (orderId) => {
+    if (!window.confirm("Are you sure you want to cancel this order? This cannot be undone.")) {
+      return; // User cancelled the confirmation
+    }
+
+    setIsLoading(true);
+    setError(null);
     try {
       const response = await fetch(`/api/orders?id=${orderId}`, {
         method: 'DELETE',
       });
-      
+
       if (response.ok) {
-        fetchOrders();
-        setShowCancelAlert(true);
-        setTimeout(() => setShowCancelAlert(false), 3000);
+        await fetchOrders(); // Refresh orders after successful cancellation
+        setShowCancelAlert(true); // Show success alert for cancellation
+        setTimeout(() => setShowCancelAlert(false), 3000); // Hide alert after 3 seconds
       } else {
-        alert('Failed to cancel order');
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to cancel order: HTTP status ${response.status}`);
       }
-    } catch (error) {
-      console.error('Failed to cancel order:', error);
-      alert('Failed to cancel order');
+    } catch (err) {
+      console.error('Failed to cancel order:', err);
+      setError(`Failed to cancel order: ${err.message}`);
+      alert(`Failed to cancel order: ${err.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const markCollected = async (orderId) => {
-    try {
-      const response = await fetch('/api/orders', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orderId,
-          status: 'collected'
-        }),
-      });
-      
-      if (response.ok) {
-        fetchOrders();
-      } else {
-        alert('Failed to update order status');
-      }
-    } catch (error) {
-      console.error('Failed to update order:', error);
-      alert('Failed to update order status');
-    }
-  };
+  // Removed 'markCollected' as it's a Barista-only action for the customer view.
+  // The onMarkCollected prop should also be removed from CustomerOrderStatus when called here.
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 p-3 sm:p-6">
@@ -136,26 +146,36 @@ export default function HomePage() {
                 Order Status
               </TabsTrigger>
             </TabsList>
-            
+
             <div className="mt-8">
               <TabsContent value="order" className="mt-0">
                 <div className="space-y-6">
                   {showCancelAlert && (
-                    <Alert className="bg-red-50 border-red-200">
-                      <AlertDescription className="text-red-800">
-                        Order cancelled successfully
+                    <Alert className="bg-green-50 border-green-200"> {/* Changed to green for success */}
+                      <AlertDescription className="text-green-800">
+                        Order cancelled successfully!
                       </AlertDescription>
                     </Alert>
                   )}
-                  <OrderForm onOrder={handleOrder} />
+                  {/* Display general error for order placement here if needed */}
+                  {error && customerTab === 'order' && (
+                      <Alert className="bg-red-50 border-red-200">
+                          <AlertDescription className="text-red-800">
+                              {error}
+                          </AlertDescription>
+                      </Alert>
+                  )}
+                  <OrderForm onOrder={handleOrder} isLoading={isLoading} /> {/* Pass isLoading to form */}
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="status" className="mt-0">
-                <CustomerOrderStatus 
+                <CustomerOrderStatus
                   orders={orders}
                   onCancelOrder={cancelOrder}
-                  onMarkCollected={markCollected}
+                  // IMPORTANT: Removed onMarkCollected as it's not for customers
+                  isLoading={isLoading} // Pass loading state to CustomerOrderStatus
+                  error={error} // Pass error state to CustomerOrderStatus
                 />
               </TabsContent>
             </div>
