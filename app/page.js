@@ -56,6 +56,7 @@ export default function HomePage() {
     setIsLoading(true);
     setError(null);
     try {
+      console.log('Sending order data:', orderDetails);
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: {
