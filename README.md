@@ -48,6 +48,12 @@ npm run build
 npm start
 ```
 
+### 5. Run Tests
+
+```bash
+npm test
+```
+
 ## Project Structure
 
 ```
