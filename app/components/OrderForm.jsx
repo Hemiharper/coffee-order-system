@@ -1,20 +1,24 @@
+// app/components/OrderForm.jsx (MODIFIED)
+
 import React, { useState } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
-import { Coffee } from 'lucide-react';
+import { Coffee, Loader2 } from 'lucide-react'; // Added Loader2 for loading indicator
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select";
 import { Textarea } from "@/app/components/ui/textarea";
 import { Input } from "@/app/components/ui/input";
 
-const OrderForm = ({ onOrder }) => {
+// IMPORTANT: onOrder prop now expects an object matching the API's requirements
+// Added isLoading prop to disable button while submitting
+const OrderForm = ({ onOrder, isLoading }) => {
   const [name, setName] = useState('');
-  const [coffee, setCoffee] = useState('');
-  const [milk, setMilk] = useState('');
+  const [coffee, setCoffee] = useState(''); // This will map to coffeeType
+  const [milk, setMilk] = useState(''); // This will map to milkOption
   const [notes, setNotes] = useState('');
 
   const coffeeOptions = [
     'Espresso',
-    'Cappuccino', 
+    'Cappuccino',
     'Latte',
     'Long Black',
     'Flat White',
@@ -23,9 +27,9 @@ const OrderForm = ({ onOrder }) => {
     'Iced Long Black'
   ];
 
-  const milkOptions = ['None', 'Cow', 'Oat', 'Almond', 'Soy'];
+  const milkOptions = ['None', 'Cow', 'Oat', 'Almond', 'Soy']; // Keep 'None' for UI, convert to null for API
 
-  const handleOrder = () => {
+  const handleOrderSubmit = () => { // Renamed to avoid confusion with onOrder prop
     if (!name.trim()) {
       alert('Please enter your name');
       return;
@@ -39,13 +43,15 @@ const OrderForm = ({ onOrder }) => {
       return;
     }
 
+    // Pass data in the format expected by your /api/orders POST endpoint
     onOrder({
-      item: { name: coffee },
-      milk: milk === 'None' ? null : milk,
-      notes,
-      name: name.trim()
+      name: name.trim(),
+      coffeeType: coffee, // Corrected to coffeeType
+      milkOption: milk === 'None' ? 'None' : milk, // Corrected to milkOption, keep 'None' as string for Airtable consistency
+      notes: notes,
     });
 
+    // Clear form after submission attempt
     setName('');
     setCoffee('');
     setMilk('');
@@ -65,11 +71,13 @@ const OrderForm = ({ onOrder }) => {
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="font-sans h-12 text-base"
+          disabled={isLoading} // Disable input while loading
         />
 
-        <Select 
+        <Select
           value={coffee}
           onValueChange={setCoffee}
+          disabled={isLoading} // Disable select while loading
         >
           <SelectTrigger className="font-sans h-12 text-base">
             <SelectValue placeholder="Select your coffee" />
@@ -83,9 +91,10 @@ const OrderForm = ({ onOrder }) => {
           </SelectContent>
         </Select>
 
-        <Select 
+        <Select
           value={milk}
           onValueChange={setMilk}
+          disabled={isLoading} // Disable select while loading
         >
           <SelectTrigger className="font-sans h-12 text-base">
             <SelectValue placeholder="Select milk type" />
@@ -104,14 +113,20 @@ const OrderForm = ({ onOrder }) => {
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           className="h-24 font-sans text-base resize-none"
+          disabled={isLoading} // Disable textarea while loading
         />
 
-        <Button 
-          onClick={handleOrder} 
+        <Button
+          onClick={handleOrderSubmit} // Changed to handleOrderSubmit
           className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base font-semibold"
+          disabled={isLoading} // Disable button while loading
         >
-          <Coffee className="w-5 h-5 mr-2" />
-          Place Order
+          {isLoading ? (
+            <Loader2 className="animate-spin h-5 w-5 mr-2" />
+          ) : (
+            <Coffee className="w-5 h-5 mr-2" />
+          )}
+          {isLoading ? 'Placing Order...' : 'Place Order'}
         </Button>
       </CardContent>
     </Card>
@@ -119,4 +134,3 @@ const OrderForm = ({ onOrder }) => {
 };
 
 export default OrderForm;
-
