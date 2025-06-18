@@ -3,17 +3,16 @@
 import React, { useState } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
-import { Coffee, Loader2 } from 'lucide-react'; // Added Loader2 for loading indicator
+import { Coffee, Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select";
 import { Textarea } from "@/app/components/ui/textarea";
 import { Input } from "@/app/components/ui/input";
 
-// IMPORTANT: onOrder prop now expects an object matching the API's requirements
-// Added isLoading prop to disable button while submitting
 const OrderForm = ({ onOrder, isLoading }) => {
   const [name, setName] = useState('');
-  const [coffee, setCoffee] = useState(''); // This will map to coffeeType
-  const [milk, setMilk] = useState(''); // This will map to milkOption
+  const [coffee, setCoffee] = useState('');
+  const [milk, setMilk] = useState('');
+  const [extras, setExtras] = useState(''); // New state for extras
   const [notes, setNotes] = useState('');
 
   const coffeeOptions = [
@@ -24,12 +23,17 @@ const OrderForm = ({ onOrder, isLoading }) => {
     'Flat White',
     'Piccolo',
     'Iced Latte',
-    'Iced Long Black'
+    'Iced Long Black',
+    'Chai Latte' // Added Chai Latte
   ];
 
-  const milkOptions = ['None', 'Cow', 'Oat', 'Almond', 'Soy']; // Keep 'None' for UI, convert to null for API
+  const milkOptions = ['None', 'Cow', 'Oat', 'Almond', 'Soy'];
+  
+  const extrasOptions = [
+    'Extra shot', 'Sugar', 'Honey'
+  ];
 
-  const handleOrderSubmit = () => { // Renamed to avoid confusion with onOrder prop
+  const handleOrderSubmit = () => {
     if (!name.trim()) {
       alert('Please enter your name');
       return;
@@ -43,18 +47,18 @@ const OrderForm = ({ onOrder, isLoading }) => {
       return;
     }
 
-    // Pass data in the format expected by your /api/orders POST endpoint
     onOrder({
       name: name.trim(),
-      coffeeType: coffee, // Corrected to coffeeType
-      milkOption: milk === 'None' ? 'None' : milk, // Corrected to milkOption, keep 'None' as string for Airtable consistency
+      coffeeType: coffee,
+      milkOption: milk,
+      extras: extras, // Pass extras field
       notes: notes,
     });
 
-    // Clear form after submission attempt
     setName('');
     setCoffee('');
     setMilk('');
+    setExtras(''); // Clear extras after submission
     setNotes('');
   };
 
@@ -71,16 +75,13 @@ const OrderForm = ({ onOrder, isLoading }) => {
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="font-sans h-12 text-base"
-          disabled={isLoading} // Disable input while loading
+          disabled={isLoading}
         />
 
-        <Select
-          value={coffee}
-          onValueChange={setCoffee}
-          disabled={isLoading} // Disable select while loading
-        >
+        <Select value={coffee} onValueChange={setCoffee} disabled={isLoading}>
           <SelectTrigger className="font-sans h-12 text-base">
-            <SelectValue placeholder="Select your coffee" />
+            {/* Updated Placeholder */}
+            <SelectValue placeholder="Choose your coffee" /> 
           </SelectTrigger>
           <SelectContent>
             {coffeeOptions.map((option) => (
@@ -91,13 +92,10 @@ const OrderForm = ({ onOrder, isLoading }) => {
           </SelectContent>
         </Select>
 
-        <Select
-          value={milk}
-          onValueChange={setMilk}
-          disabled={isLoading} // Disable select while loading
-        >
+        <Select value={milk} onValueChange={setMilk} disabled={isLoading}>
           <SelectTrigger className="font-sans h-12 text-base">
-            <SelectValue placeholder="Select milk type" />
+            {/* Updated Placeholder */}
+            <SelectValue placeholder="Milk Selection" />
           </SelectTrigger>
           <SelectContent>
             {milkOptions.map((option) => (
@@ -108,18 +106,35 @@ const OrderForm = ({ onOrder, isLoading }) => {
           </SelectContent>
         </Select>
 
+        {/* New Extras Dropdown */}
+        <Select value={extras} onValueChange={setExtras} disabled={isLoading}>
+          <SelectTrigger className="font-sans h-12 text-base">
+            {/* Updated Placeholder */}
+            <SelectValue placeholder="Extras (Optional)" />
+          </SelectTrigger>
+          <SelectContent>
+             <SelectItem value="" className="font-sans text-base py-3">None</SelectItem>
+            {extrasOptions.map((option) => (
+              <SelectItem key={option} value={option} className="font-sans text-base py-3">
+                {option}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         <Textarea
-          placeholder="Any special requests? (Optional)"
+          // Updated Placeholder
+          placeholder="Special requests (Optional)"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           className="h-24 font-sans text-base resize-none"
-          disabled={isLoading} // Disable textarea while loading
+          disabled={isLoading}
         />
 
         <Button
-          onClick={handleOrderSubmit} // Changed to handleOrderSubmit
+          onClick={handleOrderSubmit}
           className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base font-semibold"
-          disabled={isLoading} // Disable button while loading
+          disabled={isLoading}
         >
           {isLoading ? (
             <Loader2 className="animate-spin h-5 w-5 mr-2" />
