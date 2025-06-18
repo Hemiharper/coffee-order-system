@@ -23,10 +23,7 @@ const OrderForm = ({ onOrder, isLoading }) => {
   
   const extrasOptions = ['Extra shot', 'Sugar', 'Honey'];
 
-  // === CHANGE IS HERE ===
-  // The logic is now inside a standard form onSubmit handler.
   const handleOrderSubmit = (e) => {
-    // Prevent the default browser form submission which causes a page reload.
     e.preventDefault(); 
 
     if (!name.trim()) {
@@ -58,10 +55,10 @@ const OrderForm = ({ onOrder, isLoading }) => {
   };
 
   return (
-    // The form is now wrapped in a <form> element with an onSubmit handler.
-    <form onSubmit={handleOrderSubmit}>
-      <Card className="w-full shadow-sm">
-        <CardContent className="p-6 space-y-4">
+    // The form is now the top-level element. The Card has been removed from wrapping the form logic
+    // to prevent any potential event conflicts. The styling is preserved.
+    <form onSubmit={handleOrderSubmit} className="w-full shadow-sm bg-white rounded-lg">
+        <div className="p-6 space-y-4">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Place Your Order</h2>
             <p className="text-gray-600">Fill in your details below to order your perfect coffee</p>
@@ -73,7 +70,7 @@ const OrderForm = ({ onOrder, isLoading }) => {
             onChange={(e) => setName(e.target.value)}
             className="font-sans h-12 text-base"
             disabled={isLoading}
-            required // Add required attribute for browser-level validation
+            required
           />
           
           <Select value={coffee} onValueChange={setCoffee} disabled={isLoading} required>
@@ -124,7 +121,6 @@ const OrderForm = ({ onOrder, isLoading }) => {
             disabled={isLoading}
           />
 
-          {/* The button now has type="submit" */}
           <Button
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base font-semibold"
@@ -137,8 +133,7 @@ const OrderForm = ({ onOrder, isLoading }) => {
             )}
             {isLoading ? 'Placing Order...' : 'Place Order'}
           </Button>
-        </CardContent>
-      </Card>
+        </div>
     </form>
   );
 };
