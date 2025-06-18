@@ -16,7 +16,6 @@ export default function BaristaPage() {
     const [error, setError] = useState(null);
 
     // --- STABILIZED FETCH LOGIC ---
-    // Wrapped in useCallback to prevent the infinite refresh loop.
     const fetchOrders = useCallback(async () => {
         setError(null);
         try {
@@ -26,17 +25,14 @@ export default function BaristaPage() {
                 throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
-            // The sorting logic in BaristaView is more complex, so we pass the raw data.
-            // If you prefer to sort here, you can.
             setOrders(data);
         } catch (err) {
             console.error('Failed to fetch orders:', err);
             setError(`Failed to load orders. It will retry automatically.`);
         } finally {
-            // This ensures the main loader only shows on the very first fetch.
             setIsLoading(false);
         }
-    }, []); // Empty dependency array means this function is created only once.
+    }, []);
 
     // --- EFFECT FOR INITIAL LOAD AND POLLING ---
     useEffect(() => {
@@ -47,11 +43,11 @@ export default function BaristaPage() {
         }, 3000); // Poll every 3 seconds
 
         return () => clearInterval(interval); // Cleanup on unmount
-    }, [fetchOrders]); // Safely depends on the memoized fetchOrders function.
+    }, [fetchOrders]);
 
     // --- Handler for updating an order's status ---
     const updateOrderStatus = async (orderId, newStatus) => {
-        setIsUpdating(true); // Use a specific state for this action
+        setIsUpdating(true);
         setError(null);
         try {
             const response = await fetch('/api/orders', {
@@ -80,27 +76,25 @@ export default function BaristaPage() {
                 <CardHeader className="pb-6">
                     <CardTitle className="flex items-center justify-center gap-3 text-2xl sm:text-3xl font-bold">
                         <Coffee className="w-7 h-7 sm:w-8 sm:h-8" />
-                        Coffee Order System - Barista
+                        {/* UPDATED TITLE */}
+                        Big Brews - Barista
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="px-6 min-h-[400px]">
-                    {/* Show main loader only on the initial page load */}
                     {isLoading ? (
                         <div className="flex items-center justify-center pt-16">
                             <Loader2 className="animate-spin h-8 w-8 text-blue-500" />
                             <span className="ml-3 text-lg text-gray-600">Loading initial orders...</span>
                         </div>
                     ) : error ? (
-                         // Show a prominent error message if fetching fails
                         <Alert variant="destructive" className="mt-4">
                             <AlertDescription>{error}</AlertDescription>
                         </Alert>
                     ) : (
-                        // Once loaded, show the main BaristaView component
                         <BaristaView
                             orders={orders}
                             onUpdateOrderStatus={updateOrderStatus}
-                            isUpdating={isUpdating} // Pass the updating state down to disable buttons during action
+                            isUpdating={isUpdating}
                         />
                     )}
                 </CardContent>
