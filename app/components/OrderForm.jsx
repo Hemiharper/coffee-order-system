@@ -10,8 +10,6 @@ import { Input } from "@/app/components/ui/input";
 
 const OrderForm = ({ onOrder, isLoading }) => {
   const [name, setName] = useState('');
-  // === CHANGE IS HERE ===
-  // Initialize state without a value to ensure placeholders show correctly.
   const [coffee, setCoffee] = useState();
   const [milk, setMilk] = useState();
   const [extras, setExtras] = useState();
@@ -25,7 +23,12 @@ const OrderForm = ({ onOrder, isLoading }) => {
   
   const extrasOptions = ['Extra shot', 'Sugar', 'Honey'];
 
-  const handleOrderSubmit = () => {
+  // === CHANGE IS HERE ===
+  // The logic is now inside a standard form onSubmit handler.
+  const handleOrderSubmit = (e) => {
+    // Prevent the default browser form submission which causes a page reload.
+    e.preventDefault(); 
+
     if (!name.trim()) {
       alert('Please enter your name');
       return;
@@ -55,83 +58,88 @@ const OrderForm = ({ onOrder, isLoading }) => {
   };
 
   return (
-    <Card className="w-full shadow-sm">
-      <CardContent className="p-6 space-y-4">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Place Your Order</h2>
-          <p className="text-gray-600">Fill in your details below to order your perfect coffee</p>
-        </div>
+    // The form is now wrapped in a <form> element with an onSubmit handler.
+    <form onSubmit={handleOrderSubmit}>
+      <Card className="w-full shadow-sm">
+        <CardContent className="p-6 space-y-4">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Place Your Order</h2>
+            <p className="text-gray-600">Fill in your details below to order your perfect coffee</p>
+          </div>
 
-        <Input
-          placeholder="Your name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="font-sans h-12 text-base"
-          disabled={isLoading}
-        />
-        
-        <Select value={coffee} onValueChange={setCoffee} disabled={isLoading}>
-          <SelectTrigger className="font-sans h-12 text-base">
-            <SelectValue placeholder="Coffee Type" /> 
-          </SelectTrigger>
-          <SelectContent>
-            {coffeeOptions.map((option) => (
-              <SelectItem key={option} value={option} className="font-sans text-base py-3">
-                {option}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <Input
+            placeholder="Your name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="font-sans h-12 text-base"
+            disabled={isLoading}
+            required // Add required attribute for browser-level validation
+          />
+          
+          <Select value={coffee} onValueChange={setCoffee} disabled={isLoading} required>
+            <SelectTrigger className="font-sans h-12 text-base">
+              <SelectValue placeholder="Coffee Type" /> 
+            </SelectTrigger>
+            <SelectContent>
+              {coffeeOptions.map((option) => (
+                <SelectItem key={option} value={option} className="font-sans text-base py-3">
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Select value={milk} onValueChange={setMilk} disabled={isLoading}>
-          <SelectTrigger className="font-sans h-12 text-base">
-            <SelectValue placeholder="Milk Option" />
-          </SelectTrigger>
-          <SelectContent>
-            {milkOptions.map((option) => (
-              <SelectItem key={option} value={option} className="font-sans text-base py-3">
-                {option}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <Select value={milk} onValueChange={setMilk} disabled={isLoading} required>
+            <SelectTrigger className="font-sans h-12 text-base">
+              <SelectValue placeholder="Milk Option" />
+            </SelectTrigger>
+            <SelectContent>
+              {milkOptions.map((option) => (
+                <SelectItem key={option} value={option} className="font-sans text-base py-3">
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Select value={extras} onValueChange={setExtras} disabled={isLoading}>
-          <SelectTrigger className="font-sans h-12 text-base">
-            <SelectValue placeholder="Extras (Optional)" />
-          </SelectTrigger>
-          <SelectContent>
-             <SelectItem value="" className="font-sans text-base py-3">None</SelectItem>
-            {extrasOptions.map((option) => (
-              <SelectItem key={option} value={option} className="font-sans text-base py-3">
-                {option}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <Select value={extras || ''} onValueChange={setExtras} disabled={isLoading}>
+            <SelectTrigger className="font-sans h-12 text-base">
+              <SelectValue placeholder="Extras (Optional)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="" className="font-sans text-base py-3">None</SelectItem>
+              {extrasOptions.map((option) => (
+                <SelectItem key={option} value={option} className="font-sans text-base py-3">
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Textarea
-          placeholder="Notes (Optional)"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          className="h-24 font-sans text-base resize-none"
-          disabled={isLoading}
-        />
+          <Textarea
+            placeholder="Notes (Optional)"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="h-24 font-sans text-base resize-none"
+            disabled={isLoading}
+          />
 
-        <Button
-          onClick={handleOrderSubmit}
-          className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base font-semibold"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <Loader2 className="animate-spin h-5 w-5 mr-2" />
-          ) : (
-            <Coffee className="w-5 h-5 mr-2" />
-          )}
-          {isLoading ? 'Placing Order...' : 'Place Order'}
-        </Button>
-      </CardContent>
-    </Card>
+          {/* The button now has type="submit" */}
+          <Button
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base font-semibold"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="animate-spin h-5 w-5 mr-2" />
+            ) : (
+              <Coffee className="w-5 h-5 mr-2" />
+            )}
+            {isLoading ? 'Placing Order...' : 'Place Order'}
+          </Button>
+        </CardContent>
+      </Card>
+    </form>
   );
 };
 
