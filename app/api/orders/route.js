@@ -1,27 +1,28 @@
-
-// app/api/orders/route.js
+// app/api/orders/route.js (MODIFIED - with NEXT_PUBLIC_ env vars)
 
 import { NextResponse } from 'next/server'; // This is for App Router
 const Airtable = require('airtable');
 
-if (!process.env.AIRTABLE_API_KEY || !process.env.AIRTABLE_BASE_ID) {
-  console.error("Missing Airtable API Key or Base ID environment variables!");
-  // You might want to return an error here if you don't want the app to proceed
-  // However, for now, let's just log and let the existing try/catch handle it.
+// Add a check to confirm env vars are loaded - this will appear in Vercel logs if missing
+if (!process.env.NEXT_PUBLIC_AIRTABLE_API_KEY || !process.env.NEXT_PUBLIC_AIRTABLE_BASE_ID) {
+    console.error("Missing NEXT_PUBLIC_AIRTABLE_API_KEY or NEXT_PUBLIC_AIRTABLE_BASE_ID environment variables!");
+    // In a production app, you might want to throw an error or handle this more gracefully
+    // For debugging, console.error is enough.
 }
 
 // Initialize Airtable with your API Key and Base ID from Vercel Environment Variables
-const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID);
+const base = new Airtable({
+    apiKey: process.env.NEXT_PUBLIC_AIRTABLE_API_KEY
+}).base(process.env.NEXT_PUBLIC_AIRTABLE_BASE_ID);
 
 // Set CORS headers for security and cross-origin requests
-// In a production app, you would make Access-Control-Allow-Origin more restrictive
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': '*', // Be more restrictive in production, e.g., your domain
   'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-// Handle OPTIONS requests (required for CORS preflight)
+// Handle OPTIONS requests for CORS preflight
 export async function OPTIONS(request) {
   return NextResponse.json({}, { status: 200, headers: corsHeaders });
 }
@@ -47,6 +48,10 @@ export async function GET(request) {
 
   } catch (error) {
     console.error("Error fetching orders from Airtable:", error);
+    // Provide a more specific error message if the base object wasn't initialized
+    if (!base.table) { // A crude check if base isn't properly set up
+        return NextResponse.json({ message: 'Server configuration error: Airtable not initialized. Check environment variables.', error: error.message }, { status: 500, headers: corsHeaders });
+    }
     return NextResponse.json({ message: 'Failed to fetch orders', error: error.message }, { status: 500, headers: corsHeaders });
   }
 }
@@ -86,6 +91,9 @@ export async function POST(request) {
 
   } catch (error) {
     console.error("Error creating order in Airtable:", error);
+    if (!base.table) {
+        return NextResponse.json({ message: 'Server configuration error: Airtable not initialized. Check environment variables.', error: error.message }, { status: 500, headers: corsHeaders });
+    }
     return NextResponse.json({ message: 'Failed to create order', error: error.message }, { status: 500, headers: corsHeaders });
   }
 }
@@ -118,7 +126,7 @@ export async function PATCH(request) {
       id: updatedOrder.id,
       name: updatedOrder.get('Name'),
       coffeeType: updatedOrder.get('Coffee Type'),
-      milkOption: updatedOrder.get('MilkOption'), // Corrected field name based on Airtable setup
+      milkOption: updatedOrder.get('Milk Option'), // Corrected here previously, assuming it matches Airtable
       notes: updatedOrder.get('Notes'),
       status: updatedOrder.get('Status'),
       orderTimestamp: updatedOrder.get('Order Timestamp'),
@@ -126,6 +134,9 @@ export async function PATCH(request) {
 
   } catch (error) {
     console.error("Error updating order in Airtable:", error);
+    if (!base.table) {
+        return NextResponse.json({ message: 'Server configuration error: Airtable not initialized. Check environment variables.', error: error.message }, { status: 500, headers: corsHeaders });
+    }
     return NextResponse.json({ message: 'Failed to update order', error: error.message }, { status: 500, headers: corsHeaders });
   }
 }
@@ -145,6 +156,9 @@ export async function DELETE(request) {
 
   } catch (error) {
     console.error("Error deleting order from Airtable:", error);
+    if (!base.table) {
+        return NextResponse.json({ message: 'Server configuration error: Airtable not initialized. Check environment variables.', error: error.message }, { status: 500, headers: corsHeaders });
+    }
     return NextResponse.json({ message: 'Failed to cancel order', error: error.message }, { status: 500, headers: corsHeaders });
   }
 }
