@@ -10,31 +10,20 @@ import { Input } from "@/app/components/ui/input";
 
 const OrderForm = ({ onOrder, isLoading }) => {
   const [name, setName] = useState('');
-  const [coffee, setCoffee] = useState('');
-  const [milk, setMilk] = useState('');
-  const [extras, setExtras] = useState(''); // New state for extras
+  // === CHANGE IS HERE ===
+  // Initialize state without a value to ensure placeholders show correctly.
+  const [coffee, setCoffee] = useState();
+  const [milk, setMilk] = useState();
+  const [extras, setExtras] = useState();
   const [notes, setNotes] = useState('');
 
-  // === CHANGE IS HERE ===
-  // Updated coffee options list
   const coffeeOptions = [
-    'Espresso',
-    'Cappuccino',
-    'Latte',
-    'Long Black',
-    'Flat White',
-    'Piccolo',
-    'Iced Latte',
-    'Iced Long Black',
-    'Chai Latte' // Added
+    'Espresso', 'Cappuccino', 'Latte', 'Long Black', 'Flat White', 'Piccolo', 'Iced Latte', 'Iced Long Black', 'Chai Latte'
   ];
 
   const milkOptions = ['None', 'Cow', 'Oat', 'Almond', 'Soy'];
   
-  // New list for extras options
-  const extrasOptions = [
-    'Extra shot', 'Sugar', 'Honey'
-  ];
+  const extrasOptions = ['Extra shot', 'Sugar', 'Honey'];
 
   const handleOrderSubmit = () => {
     if (!name.trim()) {
@@ -50,20 +39,18 @@ const OrderForm = ({ onOrder, isLoading }) => {
       return;
     }
 
-    // Pass the new 'extras' field in the order details
     onOrder({
       name: name.trim(),
       coffeeType: coffee,
       milkOption: milk,
-      extras: extras, // Added extras
+      extras: extras,
       notes: notes,
     });
 
-    // Clear form after submission
     setName('');
-    setCoffee('');
-    setMilk('');
-    setExtras(''); // Clear extras as well
+    setCoffee(undefined);
+    setMilk(undefined);
+    setExtras(undefined);
     setNotes('');
   };
 
@@ -83,10 +70,9 @@ const OrderForm = ({ onOrder, isLoading }) => {
           disabled={isLoading}
         />
         
-        {/* === CHANGES ARE IN THIS SECTION === */}
         <Select value={coffee} onValueChange={setCoffee} disabled={isLoading}>
           <SelectTrigger className="font-sans h-12 text-base">
-            <SelectValue placeholder="Coffee Type" />
+            <SelectValue placeholder="Coffee Type" /> 
           </SelectTrigger>
           <SelectContent>
             {coffeeOptions.map((option) => (
@@ -110,7 +96,6 @@ const OrderForm = ({ onOrder, isLoading }) => {
           </SelectContent>
         </Select>
 
-        {/* New Extras Dropdown */}
         <Select value={extras} onValueChange={setExtras} disabled={isLoading}>
           <SelectTrigger className="font-sans h-12 text-base">
             <SelectValue placeholder="Extras (Optional)" />
@@ -132,7 +117,6 @@ const OrderForm = ({ onOrder, isLoading }) => {
           className="h-24 font-sans text-base resize-none"
           disabled={isLoading}
         />
-        {/* === END OF CHANGES === */}
 
         <Button
           onClick={handleOrderSubmit}
