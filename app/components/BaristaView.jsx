@@ -1,21 +1,29 @@
-// app/components/BaristaView.jsx
+// app/components/BaristaView.jsx (MODIFIED)
 
 import React from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
-import { Coffee, Clock, Check, Package, ArrowLeft, Loader2, User, FileText, Milk, PlusCircle } from 'lucide-react';
+import { Coffee, Clock, Check, Package, ArrowLeft, Loader2, User, FileText, Milk } from 'lucide-react';
+import Link from 'next/link';
+import { Alert, AlertDescription } from '@/app/components/ui/alert';
 
-const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating }) => {
+const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating, backToCustomerLink = "/" }) => {
 
+  // Sort orders by priority: Pending first, then Ready, then Collected, then by timestamp
   const sortedOrders = [...orders].sort((a, b) => {
     const statusPriority = { 'Pending': 1, 'Ready': 2, 'Collected': 3 };
+    
+    // --- CORRECTED DATA ACCESS ---
     const statusA = a['Status'] || 'Collected';
     const statusB = b['Status'] || 'Collected';
     const timeA = new Date(a['Order Timestamp'] || 0);
     const timeB = new Date(b['Order Timestamp'] || 0);
+
+    // Primary sort by status
     if (statusPriority[statusA] !== statusPriority[statusB]) {
       return statusPriority[statusA] - statusPriority[statusB];
     }
+    // Secondary sort by timestamp (oldest first)
     return timeA - timeB;
   });
 
@@ -33,11 +41,11 @@ const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating }) => {
     <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sortedOrders.map((order) => {
+                // --- CORRECTED DATA ACCESS ---
                 const status = order['Status'];
                 const name = order['Name'];
                 const coffeeType = order['Coffee Type'];
                 const milkOption = order['Milk Option'];
-                const extras = order['Extras']; // Get extras field
                 const notes = order['Notes'];
                 const isCollected = status === 'Collected';
 
@@ -56,9 +64,6 @@ const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating }) => {
                             </div>
                             <p className="text-gray-800 flex items-center gap-2"><Coffee className="w-4 h-4 text-gray-500"/>{coffeeType}</p>
                             <p className="text-gray-600 flex items-center gap-2"><Milk className="w-4 h-4 text-gray-500"/>{milkOption}</p>
-                             {extras && ( // Display extras if they exist
-                                <p className="text-gray-600 flex items-center gap-2"><PlusCircle className="w-4 h-4 text-gray-500"/>{extras}</p>
-                            )}
                             {notes && (
                                 <p className="text-sm text-gray-600 bg-gray-100 p-2 rounded-md flex items-start gap-2">
                                     <FileText className="w-4 h-4 mt-0.5 text-gray-500 flex-shrink-0"/>
