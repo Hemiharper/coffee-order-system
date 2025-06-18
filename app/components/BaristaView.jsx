@@ -3,182 +3,94 @@
 import React from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
-import { Coffee, Clock, Check, Package, ArrowLeft, Loader2 } from 'lucide-react'; // Added Loader2
+import { Coffee, Clock, Check, Package, ArrowLeft, Loader2, User, FileText, Milk } from 'lucide-react';
 import Link from 'next/link';
-import { Alert, AlertDescription } from '@/app/components/ui/alert'; // Added Alert
+import { Alert, AlertDescription } from '@/app/components/ui/alert';
 
-// Added isLoading and error props from parent (app/barista/page.js)
-const BaristaView = ({ orders, onUpdateOrderStatus, backToCustomerLink, isLoading, error }) => {
-
-  // Helper function to format timestamp
-  const formatTimestamp = (timestamp) => {
-    if (!timestamp) return 'N/A';
-    return new Date(timestamp).toLocaleString();
-  };
+const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating, backToCustomerLink = "/" }) => {
 
   // Sort orders by priority: Pending first, then Ready, then Collected, then by timestamp
   const sortedOrders = [...orders].sort((a, b) => {
     const statusPriority = { 'Pending': 1, 'Ready': 2, 'Collected': 3 };
+    
+    // --- CORRECTED DATA ACCESS ---
+    const statusA = a['Status'] || 'Collected';
+    const statusB = b['Status'] || 'Collected';
+    const timeA = new Date(a['Order Timestamp'] || 0);
+    const timeB = new Date(b['Order Timestamp'] || 0);
+
     // Primary sort by status
-    if (statusPriority[a.status] !== statusPriority[b.status]) {
-      return statusPriority[a.status] - statusPriority[b.status];
+    if (statusPriority[statusA] !== statusPriority[statusB]) {
+      return statusPriority[statusA] - statusPriority[statusB];
     }
-    // Secondary sort by timestamp (oldest first for orders with same status)
-    return new Date(a.orderTimestamp) - new Date(b.orderTimestamp);
+    // Secondary sort by timestamp (oldest first)
+    return timeA - timeB;
   });
 
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">Barista Dashboard</h2>
-          <p className="text-gray-600">Manage all customer orders</p>
-        </div>
-        <Link href={backToCustomerLink}>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Customer View
-          </Button>
-        </Link>
-      </div>
-
-      {isLoading && (
-        <div className="flex items-center justify-center p-4">
-          <Loader2 className="animate-spin h-8 w-8 text-blue-500" />
-          <span className="ml-2 text-gray-600">Loading orders...</span>
-        </div>
-      )}
-
-      {error && !isLoading && (
-        <Alert className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-          <strong className="font-bold">Error!</strong>
-          <span className="block sm:inline"> {error}</span>
-        </Alert>
-      )}
-
-      {!isLoading && sortedOrders.length === 0 && !error && (
+  if (orders.length === 0) {
+    return (
         <div className="text-center py-16">
           <Coffee className="w-20 h-20 mx-auto text-gray-300 mb-6" />
-          <p className="text-gray-500 text-lg font-medium">No orders</p>
-          <p className="text-gray-400 mt-2">Orders will appear here when customers place them</p>
+          <p className="text-gray-500 text-lg font-medium">No active orders</p>
+          <p className="text-gray-400 mt-2">New orders will appear here automatically.</p>
         </div>
-      )}
+    )
+  }
 
-      <div className="grid gap-4">
-        {!isLoading && !error && sortedOrders.map((order) => (
-          <Card key={order.id} className={
-            // IMPORTANT: Use capitalized status strings here to match Airtable
-            order.status === 'Pending' ? 'border-l-4 border-l-yellow-500 shadow-md' :
-            order.status === 'Ready' ? 'border-l-4 border-l-green-500 shadow-md' :
-            'border-l-4 border-l-blue-500 shadow-md'
-          }>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-3 flex-1">
-                    <div className="flex items-center gap-3">
-                      {/* CORRECTED: Use order.coffeeType */}
-                      <h3 className="font-bold text-xl text-gray-800">
-                        {order.coffeeType}
-                      </h3>
-                      {/* CORRECTED: Use capitalized status strings */}
-                      {order.status === 'Pending' && (
-                        <span className="inline-flex items-center text-yellow-700 text-sm font-medium px-3 py-1 bg-yellow-100 rounded-full">
-                          <Clock className="w-4 h-4 mr-1" />
-                          Pending
-                        </span>
-                      )}
-                      {order.status === 'Ready' && (
-                        <span className="inline-flex items-center text-green-700 text-sm font-medium px-3 py-1 bg-green-100 rounded-full">
-                          <Check className="w-4 h-4 mr-1" />
-                          Ready
-                        </span>
-                      )}
-                      {order.status === 'Collected' && (
-                        <span className="inline-flex items-center text-blue-700 text-sm font-medium px-3 py-1 bg-blue-100 rounded-full">
-                          <Package className="w-4 h-4 mr-1" />
-                          Collected
-                        </span>
-                      )}
-                    </div>
+  return (
+    <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sortedOrders.map((order) => {
+                // --- CORRECTED DATA ACCESS ---
+                const status = order['Status'];
+                const name = order['Name'];
+                const coffeeType = order['Coffee Type'];
+                const milkOption = order['Milk Option'];
+                const notes = order['Notes'];
+                const isCollected = status === 'Collected';
 
-                    <p className="text-lg font-medium text-gray-700">Customer: {order.name}</p>
-                    {/* CORRECTED: Use order.milkOption, and check for 'None' if applicable */}
-                    {order.milkOption && order.milkOption !== 'None' && (
-                      <p className="text-base text-gray-600">Milk: {order.milkOption}</p>
-                    )}
-                    {order.notes && (
-                      <div className="bg-blue-50 p-3 rounded-lg">
-                        <p className="text-sm text-blue-800">
-                          <strong>Special requests:</strong> {order.notes}
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="space-y-1 text-sm text-gray-500">
-                      {/* CORRECTED: Use order.orderTimestamp */}
-                      <p><strong>Ordered:</strong> {formatTimestamp(order.orderTimestamp)}</p>
-                      {/* Removed readyAt and collectedAt as these fields are not in Airtable */}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3">
-                  {order.status === 'Pending' && ( // Use capitalized 'Pending'
-                    <Button
-                      onClick={() => onUpdateOrderStatus(order.id, 'Ready')} // Change status to 'Ready' (capitalized)
-                      className="bg-green-600 hover:bg-green-700 flex-1"
-                      size="lg"
-                      disabled={isLoading} // Disable button while loading
-                    >
-                      <Check className="w-5 h-5 mr-2" />
-                      Mark Ready for Pickup
-                    </Button>
-                  )}
-                  {order.status === 'Ready' && ( // Use capitalized 'Ready'
-                    <>
-                      <Button
-                        onClick={() => onUpdateOrderStatus(order.id, 'Pending')} // Change status to 'Pending' (capitalized)
-                        variant="outline"
-                        className="border-yellow-300 text-yellow-700 hover:bg-yellow-50 flex-1"
-                        size="lg"
-                        disabled={isLoading} // Disable button while loading
-                      >
-                        <Clock className="w-5 h-5 mr-2" />
-                        Mark as Preparing
-                      </Button>
-                      <Button
-                        onClick={() => onUpdateOrderStatus(order.id, 'Collected')} // Change status to 'Collected' (capitalized)
-                        className="bg-blue-600 hover:bg-blue-700 flex-1"
-                        size="lg"
-                        disabled={isLoading} // Disable button while loading
-                      >
-                        <Package className="w-5 h-5 mr-2" />
-                        Mark as Collected
-                      </Button>
-                    </>
-                  )}
-                  {order.status === 'Collected' && ( // Use capitalized 'Collected'
-                    <Button
-                      onClick={() => onUpdateOrderStatus(order.id, 'Ready')} // Allow marking back to 'Ready'
-                      variant="outline"
-                      className="border-green-300 text-green-700 hover:bg-green-50 flex-1"
-                      size="lg"
-                      disabled={isLoading} // Disable button while loading
-                    >
-                      <Check className="w-5 h-5 mr-2" />
-                      Mark as Ready (Revert)
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                return (
+                    <Card key={order.id} className={`flex flex-col justify-between transition-opacity ${isCollected ? 'opacity-60 bg-gray-50' : 'bg-white shadow-md'}`}>
+                        <CardContent className="p-4 space-y-3">
+                             <div className="flex justify-between items-center">
+                                <p className="font-bold text-lg flex items-center gap-2"><User className="w-5 h-5 text-gray-500"/>{name}</p>
+                                <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full ${
+                                    status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                                    status === 'Ready' ? 'bg-green-100 text-green-800' :
+                                    'bg-blue-100 text-blue-800'
+                                }`}>
+                                    {status}
+                                </span>
+                            </div>
+                            <p className="text-gray-800 flex items-center gap-2"><Coffee className="w-4 h-4 text-gray-500"/>{coffeeType}</p>
+                            <p className="text-gray-600 flex items-center gap-2"><Milk className="w-4 h-4 text-gray-500"/>{milkOption}</p>
+                            {notes && (
+                                <p className="text-sm text-gray-600 bg-gray-100 p-2 rounded-md flex items-start gap-2">
+                                    <FileText className="w-4 h-4 mt-0.5 text-gray-500 flex-shrink-0"/>
+                                    <span>{notes}</span>
+                                </p>
+                            )}
+                        </CardContent>
+                        <div className="p-4 bg-gray-50 border-t flex justify-end gap-2">
+                            {status === 'Pending' && (
+                                <Button onClick={() => onUpdateOrderStatus(order.id, 'Ready')} disabled={isUpdating} className="w-full">
+                                    Mark as Ready
+                                </Button>
+                            )}
+                            {status === 'Ready' && (
+                                <Button onClick={() => onUpdateOrderStatus(order.id, 'Collected')} disabled={isUpdating} className="w-full bg-green-600 hover:bg-green-700">
+                                    <Check className="mr-2 h-4 w-4" />
+                                    Mark as Collected
+                                </Button>
+                            )}
+                            {status === 'Collected' && (
+                               <p className="text-sm text-gray-500 italic w-full text-right">Order complete</p>
+                            )}
+                        </div>
+                    </Card>
+                )
+            })}
+        </div>
     </div>
   );
 };
