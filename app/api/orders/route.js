@@ -4,6 +4,12 @@
 import { NextResponse } from 'next/server'; // This is for App Router
 const Airtable = require('airtable');
 
+if (!process.env.AIRTABLE_API_KEY || !process.env.AIRTABLE_BASE_ID) {
+  console.error("Missing Airtable API Key or Base ID environment variables!");
+  // You might want to return an error here if you don't want the app to proceed
+  // However, for now, let's just log and let the existing try/catch handle it.
+}
+
 // Initialize Airtable with your API Key and Base ID from Vercel Environment Variables
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID);
 
