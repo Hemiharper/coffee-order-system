@@ -24,10 +24,7 @@ export default function HomePage() {
     const [error, setError] = useState(null);
 
     // --- STABILIZED FETCH LOGIC ---
-    // fetchOrders is wrapped in useCallback to prevent it from being recreated on every render.
-    // This is the key to stopping the infinite refresh loop.
     const fetchOrders = useCallback(async () => {
-        // We don't set isLoading to true here because polling should happen in the background.
         setError(null);
         try {
             const response = await fetch('/api/orders', { cache: 'no-store' });
@@ -41,22 +38,20 @@ export default function HomePage() {
             console.error('Failed to fetch orders:', err);
             setError(`Failed to load orders. A refresh may be needed.`);
         } finally {
-            // Only set isLoading to false on the initial load.
             setIsLoading(false);
         }
-    }, []); // Empty dependency array [] means this function is created only ONCE.
+    }, []);
 
     // --- EFFECT FOR INITIAL LOAD AND POLLING ---
     useEffect(() => {
-        fetchOrders(); // Fetch immediately on component mount.
+        fetchOrders();
 
         const interval = setInterval(() => {
-            fetchOrders(); // Poll for new data.
-        }, 5000); // Poll every 5 seconds.
+            fetchOrders();
+        }, 5000);
 
-        // Cleanup function to stop polling when the component is removed.
         return () => clearInterval(interval);
-    }, [fetchOrders]); // This effect now correctly and safely depends on the stable fetchOrders function.
+    }, [fetchOrders]);
 
     // --- Handler for placing a new order ---
     const handleOrder = async (orderDetails) => {
@@ -76,9 +71,9 @@ export default function HomePage() {
             }
             
             const newOrder = await response.json();
-            setCustomerOrderId(newOrder.id); // IMPORTANT: Track the ID of the order we just placed.
-            await fetchOrders(); // Refresh orders to include the new one.
-            setCustomerTab('status'); // Switch to status view.
+            setCustomerOrderId(newOrder.id);
+            await fetchOrders();
+            setCustomerTab('status');
             
         } catch (err) {
             console.error('Failed to place order:', err);
@@ -90,8 +85,6 @@ export default function HomePage() {
 
     // --- Handler for cancelling an order ---
     const cancelOrder = async (orderId) => {
-        // Use a simple custom modal/confirm if needed, avoiding window.confirm for robustness
-        // For now, we proceed directly for simplicity.
         setIsLoading(true);
         setError(null);
         try {
@@ -99,8 +92,8 @@ export default function HomePage() {
 
             if (response.ok) {
                 await fetchOrders();
-                setCustomerOrderId(null); // Untrack the order ID
-                setCustomerTab('order'); // Go back to the order form
+                setCustomerOrderId(null);
+                setCustomerTab('order');
                 setShowCancelAlert(true);
                 setTimeout(() => setShowCancelAlert(false), 4000);
             } else {
@@ -125,7 +118,8 @@ export default function HomePage() {
                     <CardTitle className="flex items-center justify-between text-2xl sm:text-3xl font-bold">
                         <div className="flex items-center gap-3">
                             <Coffee className="w-7 h-7 sm:w-8 sm:h-8" />
-                            Coffee Order System
+                            {/* UPDATED TITLE */}
+                            Big Brews
                         </div>
                         <Link href="/barista">
                             <Button variant="outline" className="flex items-center gap-2 text-sm">
@@ -145,7 +139,7 @@ export default function HomePage() {
                             </TabsTrigger>
                         </TabsList>
 
-                        <div className="mt-8 min-h-[250px]"> {/* Added min-height to prevent layout shifts */}
+                        <div className="mt-8 min-h-[250px]">
                             {error && (
                                 <Alert variant="destructive" className="mb-4">
                                     <AlertDescription>{error}</AlertDescription>
@@ -167,9 +161,9 @@ export default function HomePage() {
                                     <p className="text-center text-gray-500 pt-8">Loading...</p>
                                 ) : myOrder ? (
                                     <CustomerOrderStatus
-                                        // Pass ONLY the customer's order to the status component
                                         order={myOrder}
                                         onCancelOrder={cancelOrder}
+                                        isLoading={isLoading}
                                     />
                                 ) : (
                                     <p className="text-center text-gray-500 pt-8">
