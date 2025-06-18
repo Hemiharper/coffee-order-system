@@ -80,7 +80,7 @@ export default function BaristaPage() {
                 <CardHeader className="pb-6">
                     <CardTitle className="flex items-center justify-center gap-3 text-2xl sm:text-3xl font-bold">
                         <Coffee className="w-7 h-7 sm:w-8 sm:h-8" />
-                        Coffee Order System - Barista
+                        Big Brews - Barista Views
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="px-6 min-h-[400px]">
