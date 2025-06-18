@@ -1,7 +1,14 @@
-// app/api/orders/route.js
+// app/api/orders/route.js (Stable Rollback)
 
 import { NextResponse } from 'next/server';
 const Airtable = require('airtable');
+
+// --- CORS Headers ---
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
 
 // --- Helper function to initialize Airtable ---
 const getAirtableBase = () => {
@@ -9,13 +16,6 @@ const getAirtableBase = () => {
         throw new Error("SERVER_CONFIG_ERROR: Missing Airtable API Key or Base ID.");
     }
     return new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID);
-};
-
-// --- CORS Headers ---
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
 // --- API Route Handlers ---
@@ -50,9 +50,8 @@ export async function POST(request) {
     const base = getAirtableBase();
     const body = await request.json();
     
-    // === CHANGE IS HERE ===
-    // Destructure all expected fields, including the new 'extras' field
-    const { name, coffeeType, milkOption, extras, notes } = body;
+    // ROLLED BACK: The 'extras' field is temporarily removed.
+    const { name, coffeeType, milkOption, notes } = body;
 
     if (!name || !coffeeType || !milkOption) {
       return NextResponse.json({ message: 'Missing required fields' }, { status: 400, headers: corsHeaders });
@@ -64,13 +63,12 @@ export async function POST(request) {
           'Name': name,
           'Coffee Type': coffeeType,
           'Milk Option': milkOption,
-          'Extras': extras || null, // Save extras, or null if it's empty
+          // 'Extras' field is removed for this stable version
           'Notes': notes || '',
           'Status': 'Pending',
         }
       }
     ]);
-    // === END OF CHANGE ===
 
     const newOrder = {
         id: createdRecords[0].id,
