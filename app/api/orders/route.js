@@ -4,16 +4,16 @@ import { NextResponse } from 'next/server'; // This is for App Router
 const Airtable = require('airtable');
 
 // Add a check to confirm env vars are loaded - this will appear in Vercel logs if missing
-if (!process.env.NEXT_PUBLIC_AIRTABLE_API_KEY || !process.env.NEXT_PUBLIC_AIRTABLE_BASE_ID) {
-    console.error("Missing NEXT_PUBLIC_AIRTABLE_API_KEY or NEXT_PUBLIC_AIRTABLE_BASE_ID environment variables!");
+if (!process.env.AIRTABLE_API_KEY || !process.env.AIRTABLE_BASE_ID) {
+    console.error("Missing AIRTABLE_API_KEY or AIRTABLE_BASE_ID environment variables!");
     // In a production app, you might want to throw an error or handle this more gracefully
     // For debugging, console.error is enough.
 }
 
 // Initialize Airtable with your API Key and Base ID from Vercel Environment Variables
 const base = new Airtable({
-    apiKey: process.env.NEXT_PUBLIC_AIRTABLE_API_KEY
-}).base(process.env.NEXT_PUBLIC_AIRTABLE_BASE_ID);
+    apiKey: process.env.AIRTABLE_API_KEY
+}).base(process.env.AIRTABLE_BASE_ID);
 
 // Set CORS headers for security and cross-origin requests
 const corsHeaders = {
