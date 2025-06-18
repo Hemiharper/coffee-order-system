@@ -1,88 +1,140 @@
-// app/components/CustomerOrderStatus.jsx
+// app/api/orders/route.js (Corrected Version)
 
-import React from 'react';
-import { Button } from '@/app/components/ui/button';
-import { Card, CardContent } from '@/app/components/ui/card';
-import { Coffee, Clock, Check, XCircle, Package } from 'lucide-react';
+import { NextResponse } from 'next/server';
+const Airtable = require('airtable');
 
-export default function CustomerOrderStatus({ order, onCancelOrder, isLoading }) {
-  // Defensive check: If for any reason the order object is not available, show nothing.
-  if (!order) {
-    return <p className="text-center text-gray-500 py-16">Your order status will appear here.</p>;
-  }
-
-  // Helper function to format timestamp
-  const formatTimestamp = (timestamp) => {
-    if (!timestamp) return 'N/A';
-    return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  // --- CORRECTED DATA ACCESS ---
-  // Use bracket notation `['Property Name']` to access keys with spaces.
-  const status = order['Status'];
-  const name = order['Name'];
-  const coffeeType = order['Coffee Type'];
-  const milkOption = order['Milk Option'];
-  const notes = order['Notes'];
-  const orderTimestamp = order['Order Timestamp'];
+// --- Airtable Initialization ---
+if (!process.env.AIRTABLE_API_KEY || !process.env.AIRTABLE_BASE_ID) {
+    console.error("CRITICAL: Missing AIRTABLE_API_KEY or AIRTABLE_BASE_ID environment variables!");
+}
+const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID);
 
 
-  return (
-    <Card className="shadow-md border-2 border-gray-200">
-      <CardContent className="p-6">
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-            <div className="space-y-3 flex-1">
-              <h3 className="font-bold text-xl text-gray-800">{coffeeType}</h3>
-              <p className="text-base font-medium text-gray-700">For: {name}</p>
-              {milkOption && milkOption !== 'None' && (
-                <p className="text-sm text-gray-600">Milk: {milkOption}</p>
-              )}
-              {notes && (
-                <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-                  <strong>Notes:</strong> {notes}
-                </p>
-              )}
-              <div className="space-y-1 text-sm text-gray-500 pt-2">
-                <p><strong>Ordered:</strong> {formatTimestamp(orderTimestamp)}</p>
-              </div>
-            </div>
-
-            <div className="flex flex-col items-start sm:items-end gap-3">
-              {status === 'Pending' && (
-                <>
-                  <span className="flex items-center text-yellow-600 font-medium text-lg">
-                    <Clock className="w-5 h-5 mr-2" />
-                    Preparing...
-                  </span>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => onCancelOrder(order.id)}
-                    className="bg-red-500 hover:bg-red-600"
-                    disabled={isLoading} // Disable button while operations are ongoing
-                  >
-                    <XCircle className="w-4 h-4 mr-2" />
-                    Cancel Order
-                  </Button>
-                </>
-              )}
-              {status === 'Ready' && (
-                <span className="flex items-center text-green-600 font-medium text-lg">
-                  <Check className="w-5 h-5 mr-2" />
-                  Ready for pickup!
-                </span>
-              )}
-              {status === 'Collected' && (
-                <span className="flex items-center text-blue-600 font-medium text-lg">
-                  <Package className="w-5 h-5 mr-2" />
-                  Collected
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+// --- CORS Headers ---
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
+
+
+// --- API Route Handlers ---
+
+export async function OPTIONS(request) {
+  return NextResponse.json({}, { status: 200, headers: corsHeaders });
+}
+
+
+export async function GET(request) {
+  try {
+    const records = await base('Orders').select({
+      sort: [{ field: "Order Timestamp", direction: "asc" }]
+    }).all();
+
+    const orders = records.map(record => ({
+      id: record.id,
+      ...record.fields
+    }));
+
+    return NextResponse.json(orders, { status: 200, headers: corsHeaders });
+
+  } catch (error) {
+    console.error('--- DETAILED AIRTABLE FETCH ERROR ---');
+    console.error('Full Error Object:', JSON.stringify(error, null, 2));
+    return NextResponse.json({ message: 'Failed to fetch orders', error: error.message }, { status: 500, headers: corsHeaders });
+  }
+}
+
+export async function POST(request) {
+  try {
+    const body = await request.json();
+    // Destructure all expected fields, including the new 'extras' field
+    const { name, coffeeType, milkOption, extras, notes } = body;
+
+    if (!name || !coffeeType || !milkOption) {
+      return NextResponse.json({ message: 'Missing required fields: name, coffeeType, milkOption' }, { status: 400, headers: corsHeaders });
+    }
+
+    const createdRecords = await base('Orders').create([
+      {
+        fields: {
+          'Name': name,
+          'Coffee Type': coffeeType,
+          'Milk Option': milkOption,
+          'Extras': extras || null, // Save extras, or null if it's empty/undefined
+          'Notes': notes || '',
+          'Status': 'Pending',
+        }
+      }
+    ]);
+
+    const newOrder = {
+        id: createdRecords[0].id,
+        ...createdRecords[0].fields
+    };
+
+    return NextResponse.json(newOrder, { status: 201, headers: corsHeaders });
+
+  } catch (error) {
+    // Log the body to see what data caused the error
+    const errorBody = await request.json().catch(() => "Could not parse request body");
+    console.error('--- DETAILED AIRTABLE CREATION ERROR ---');
+    console.error('Request Body Received:', JSON.stringify(errorBody, null, 2));
+    console.error('Full Error Object:', JSON.stringify(error, null, 2));
+    console.error('--- END OF ERROR DETAILS ---');
+
+    return NextResponse.json({ message: 'Failed to create order', error: error.message }, { status: 500, headers: corsHeaders });
+  }
+}
+
+
+export async function PATCH(request) {
+    try {
+        const { id, status } = await request.json();
+
+        if (!id || !status) {
+            return NextResponse.json({ message: 'Missing required fields for update: id, status' }, { status: 400, headers: corsHeaders });
+        }
+        
+        const validStatuses = ['Pending', 'Ready', 'Collected'];
+        if (!validStatuses.includes(status)) {
+            return NextResponse.json({ message: `Invalid status: '${status}'` }, { status: 400, headers: corsHeaders });
+        }
+
+        const updatedRecords = await base('Orders').update([
+            { id: id, fields: { 'Status': status } }
+        ]);
+
+        const updatedOrder = {
+            id: updatedRecords[0].id,
+            ...updatedRecords[0].fields
+        };
+
+        return NextResponse.json(updatedOrder, { status: 200, headers: corsHeaders });
+
+    } catch (error) {
+        console.error('--- DETAILED AIRTABLE UPDATE ERROR ---');
+        console.error('Full Error Object:', JSON.stringify(error, null, 2));
+        return NextResponse.json({ message: 'Failed to update order', error: error.message }, { status: 500, headers: corsHeaders });
+    }
+}
+
+
+export async function DELETE(request) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get('id');
+
+        if (!id) {
+            return NextResponse.json({ message: 'Missing order ID for deletion.' }, { status: 400, headers: corsHeaders });
+        }
+
+        await base('Orders').destroy([id]);
+        return NextResponse.json({ message: 'Order successfully cancelled.' }, { status: 204, headers: corsHeaders });
+
+    } catch (error) {
+        console.error('--- DETAILED AIRTABLE DELETION ERROR ---');
+        console.error('Full Error Object:', JSON.stringify(error, null, 2));
+        return NextResponse.json({ message: 'Failed to cancel order', error: error.message }, { status: 500, headers: corsHeaders });
+    }
+}
