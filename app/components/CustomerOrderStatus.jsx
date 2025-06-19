@@ -19,7 +19,7 @@ export default function CustomerOrderStatus({ order, onCancelOrder }) {
   const name = order['Name'];
   const coffeeType = order['Coffee Type'];
   const milkOption = order['Milk Option'];
-  const extras = order['Extras']; // Get extras field
+  const extras = order['Extras'];
   const notes = order['Notes'];
   const orderTimestamp = order['Order Timestamp'];
 
@@ -38,10 +38,11 @@ export default function CustomerOrderStatus({ order, onCancelOrder }) {
               </div>
               
               {/* === CHANGE IS HERE === */}
-              {extras && (
+              {extras && extras.length > 0 && (
                 <div className="flex items-center gap-3 text-sm text-gray-600">
                   <PlusCircle className="w-4 h-4" />
-                  <span>{extras}</span>
+                  {/* Join the array elements with a comma and space */}
+                  <span>{extras.join(', ')}</span>
                 </div>
               )}
 
