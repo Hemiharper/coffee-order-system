@@ -10,10 +10,13 @@ import { Input } from "@/app/components/ui/input";
 
 const OrderForm = ({ onOrder, isLoading }) => {
   const [name, setName] = useState('');
-  const [coffee, setCoffee] = useState('');
-  const [milk, setMilk] = useState('');
+  // Set initial state to undefined to ensure placeholders are shown correctly
+  const [coffee, setCoffee] = useState(undefined);
+  const [milk, setMilk] = useState(undefined);
+  const [extras, setExtras] = useState(undefined); // New state for extras
   const [notes, setNotes] = useState('');
 
+  // Updated coffee options list
   const coffeeOptions = [
     'Espresso',
     'Cappuccino',
@@ -22,13 +25,19 @@ const OrderForm = ({ onOrder, isLoading }) => {
     'Flat White',
     'Piccolo',
     'Iced Latte',
-    'Iced Long Black'
+    'Iced Long Black',
+    'Chai Latte' // Added
   ];
 
   const milkOptions = ['None', 'Cow', 'Oat', 'Almond', 'Soy'];
+  
+  // New list for extras options
+  const extrasOptions = [
+    'Extra shot', 'Sugar', 'Honey'
+  ];
 
-  const handleOrderSubmit = (e) => { // Use onSubmit for form handling
-    e.preventDefault(); // Prevent page reload
+  const handleOrderSubmit = (e) => {
+    e.preventDefault(); 
 
     if (!name.trim()) {
       alert('Please enter your name');
@@ -43,21 +52,24 @@ const OrderForm = ({ onOrder, isLoading }) => {
       return;
     }
 
+    // Pass the new 'extras' field in the order details
     onOrder({
       name: name.trim(),
       coffeeType: coffee,
       milkOption: milk,
+      extras: extras, // Added extras
       notes: notes,
     });
 
+    // Reset form to its initial state
     setName('');
-    setCoffee('');
-    setMilk('');
+    setCoffee(undefined);
+    setMilk(undefined);
+    setExtras(undefined);
     setNotes('');
   };
 
   return (
-    // Use a <form> element for semantic correctness and robust handling
     <form onSubmit={handleOrderSubmit}>
         <Card className="w-full shadow-sm">
         <CardContent className="p-6 space-y-4">
@@ -74,10 +86,11 @@ const OrderForm = ({ onOrder, isLoading }) => {
             disabled={isLoading}
             required
             />
-
+            
+            {/* === CHANGES ARE IN THIS SECTION === */}
             <Select value={coffee} onValueChange={setCoffee} disabled={isLoading} required>
             <SelectTrigger className="font-sans h-12 text-base">
-                <SelectValue placeholder="Select your coffee" />
+                <SelectValue placeholder="Coffee Type" />
             </SelectTrigger>
             <SelectContent>
                 {coffeeOptions.map((option) => (
@@ -90,7 +103,7 @@ const OrderForm = ({ onOrder, isLoading }) => {
 
             <Select value={milk} onValueChange={setMilk} disabled={isLoading} required>
             <SelectTrigger className="font-sans h-12 text-base">
-                <SelectValue placeholder="Select milk type" />
+                <SelectValue placeholder="Milk Option" />
             </SelectTrigger>
             <SelectContent>
                 {milkOptions.map((option) => (
@@ -101,8 +114,23 @@ const OrderForm = ({ onOrder, isLoading }) => {
             </SelectContent>
             </Select>
 
+            {/* New Extras Dropdown */}
+            <Select value={extras} onValueChange={setExtras} disabled={isLoading}>
+                <SelectTrigger className="font-sans h-12 text-base">
+                    <SelectValue placeholder="Extras" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="" className="font-sans text-base py-3">None</SelectItem>
+                    {extrasOptions.map((option) => (
+                    <SelectItem key={option} value={option} className="font-sans text-base py-3">
+                        {option}
+                    </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+
             <Textarea
-            placeholder="Any special requests? (Optional)"
+            placeholder="Notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             className="h-24 font-sans text-base resize-none"
@@ -110,7 +138,7 @@ const OrderForm = ({ onOrder, isLoading }) => {
             />
 
             <Button
-            type="submit" // Set button type to submit for the form
+            type="submit"
             className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base font-semibold"
             disabled={isLoading}
             >
