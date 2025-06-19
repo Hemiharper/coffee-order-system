@@ -7,65 +7,60 @@ import { Coffee, Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select";
 import { Textarea } from "@/app/components/ui/textarea";
 import { Input } from "@/app/components/ui/input";
+import { Checkbox } from "@/app/components/ui/checkbox"; // Import the Checkbox component
+import { Label } from "@/app/components/ui/label"; // Import the Label component
 
 const OrderForm = ({ onOrder, isLoading }) => {
   const [name, setName] = useState('');
-  // Set initial state to undefined to ensure placeholders are shown correctly
   const [coffee, setCoffee] = useState(undefined);
   const [milk, setMilk] = useState(undefined);
-  const [extras, setExtras] = useState(undefined); // New state for extras
   const [notes, setNotes] = useState('');
-
-  // Updated coffee options list
-  const coffeeOptions = [
-    'Espresso',
-    'Cappuccino',
-    'Latte',
-    'Long Black',
-    'Flat White',
-    'Piccolo',
-    'Iced Latte',
-    'Iced Long Black',
-    'Chai Latte' // Added
-  ];
-
-  const milkOptions = ['None', 'Cow', 'Oat', 'Almond', 'Soy'];
   
-  // New list for extras options
-  const extrasOptions = [
-    'Extra shot', 'Sugar', 'Honey'
+  // === CHANGE IS HERE ===
+  // 'extras' state is now an array to hold multiple selections.
+  const [extras, setExtras] = useState([]);
+
+  const coffeeOptions = [
+    'Espresso', 'Cappuccino', 'Latte', 'Long Black', 'Flat White', 'Piccolo', 'Iced Latte', 'Iced Long Black', 'Chai Latte'
   ];
+  const milkOptions = ['None', 'Cow', 'Oat', 'Almond', 'Soy'];
+  const extrasOptions = ['Extra shot', 'Sugar', 'Honey'];
+
+  // This function handles changes to the checkboxes.
+  const handleExtrasChange = (extra) => {
+    setExtras(prevExtras => {
+      // If the extra is already selected, remove it (uncheck).
+      if (prevExtras.includes(extra)) {
+        return prevExtras.filter(item => item !== extra);
+      }
+      // Otherwise, add it to the list (check).
+      else {
+        return [...prevExtras, extra];
+      }
+    });
+  };
 
   const handleOrderSubmit = (e) => {
     e.preventDefault(); 
 
-    if (!name.trim()) {
-      alert('Please enter your name');
-      return;
-    }
-    if (!coffee) {
-      alert('Please select a coffee');
-      return;
-    }
-    if (!milk) {
-      alert('Please select milk preference');
+    if (!name.trim() || !coffee || !milk) {
+      alert('Please complete all required fields.');
       return;
     }
 
-    // Pass the new 'extras' field in the order details
     onOrder({
       name: name.trim(),
       coffeeType: coffee,
       milkOption: milk,
-      extras: extras, // Added extras
+      extras: extras, // Pass the array of selected extras
       notes: notes,
     });
 
-    // Reset form to its initial state
+    // Reset form after submission
     setName('');
     setCoffee(undefined);
     setMilk(undefined);
-    setExtras(undefined);
+    setExtras([]); // Reset extras to an empty array
     setNotes('');
   };
 
@@ -79,75 +74,74 @@ const OrderForm = ({ onOrder, isLoading }) => {
             </div>
 
             <Input
-            placeholder="Your name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="font-sans h-12 text-base"
-            disabled={isLoading}
-            required
+              placeholder="Your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="font-sans h-12 text-base"
+              disabled={isLoading}
+              required
             />
             
-            {/* === CHANGES ARE IN THIS SECTION === */}
             <Select value={coffee} onValueChange={setCoffee} disabled={isLoading} required>
-            <SelectTrigger className="font-sans h-12 text-base">
-                <SelectValue placeholder="Coffee Type" />
-            </SelectTrigger>
-            <SelectContent>
-                {coffeeOptions.map((option) => (
-                <SelectItem key={option} value={option} className="font-sans text-base py-3">
-                    {option}
-                </SelectItem>
-                ))}
-            </SelectContent>
+              <SelectTrigger className="font-sans h-12 text-base">
+                  <SelectValue placeholder="Coffee Type" />
+              </SelectTrigger>
+              <SelectContent>
+                  {coffeeOptions.map((option) => (
+                  <SelectItem key={option} value={option} className="font-sans text-base py-3">
+                      {option}
+                  </SelectItem>
+                  ))}
+              </SelectContent>
             </Select>
 
             <Select value={milk} onValueChange={setMilk} disabled={isLoading} required>
-            <SelectTrigger className="font-sans h-12 text-base">
-                <SelectValue placeholder="Milk Option" />
-            </SelectTrigger>
-            <SelectContent>
-                {milkOptions.map((option) => (
-                <SelectItem key={option} value={option} className="font-sans text-base py-3">
-                    {option}
-                </SelectItem>
-                ))}
-            </SelectContent>
+              <SelectTrigger className="font-sans h-12 text-base">
+                  <SelectValue placeholder="Milk Option" />
+              </SelectTrigger>
+              <SelectContent>
+                  {milkOptions.map((option) => (
+                  <SelectItem key={option} value={option} className="font-sans text-base py-3">
+                      {option}
+                  </SelectItem>
+                  ))}
+              </SelectContent>
             </Select>
 
-            {/* New Extras Dropdown */}
-            <Select value={extras} onValueChange={setExtras} disabled={isLoading}>
-                <SelectTrigger className="font-sans h-12 text-base">
-                    <SelectValue placeholder="Extras" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="" className="font-sans text-base py-3">None</SelectItem>
+            {/* === CHANGE IS HERE: Replaced dropdown with checkboxes === */}
+            <div className="space-y-2">
+                <Label className="text-base text-gray-700">Extras (Optional)</Label>
+                <div className="flex items-center space-x-6 pt-2">
                     {extrasOptions.map((option) => (
-                    <SelectItem key={option} value={option} className="font-sans text-base py-3">
-                        {option}
-                    </SelectItem>
+                        <div key={option} className="flex items-center space-x-2">
+                            <Checkbox
+                                id={option}
+                                checked={extras.includes(option)}
+                                onCheckedChange={() => handleExtrasChange(option)}
+                            />
+                            <Label htmlFor={option} className="text-base font-normal">
+                                {option}
+                            </Label>
+                        </div>
                     ))}
-                </SelectContent>
-            </Select>
+                </div>
+            </div>
 
             <Textarea
-            placeholder="Notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="h-24 font-sans text-base resize-none"
-            disabled={isLoading}
+              placeholder="Notes (Optional)"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="h-24 font-sans text-base resize-none"
+              disabled={isLoading}
             />
 
             <Button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base font-semibold"
-            disabled={isLoading}
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base font-semibold"
+              disabled={isLoading}
             >
-            {isLoading ? (
-                <Loader2 className="animate-spin h-5 w-5 mr-2" />
-            ) : (
-                <Coffee className="w-5 h-5 mr-2" />
-            )}
-            {isLoading ? 'Placing Order...' : 'Place Order'}
+              {isLoading ? (<Loader2 className="animate-spin h-5 w-5 mr-2" />) : (<Coffee className="w-5 h-5 mr-2" />)}
+              {isLoading ? 'Placing Order...' : 'Place Order'}
             </Button>
         </CardContent>
         </Card>
