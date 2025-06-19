@@ -7,18 +7,15 @@ import { Coffee, Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select";
 import { Textarea } from "@/app/components/ui/textarea";
 import { Input } from "@/app/components/ui/input";
-import { Checkbox } from "@/app/components/ui/checkbox"; // Import the Checkbox component
-import { Label } from "@/app/components/ui/label"; // Import the Label component
+import { Checkbox } from "@/app/components/ui/checkbox";
+import { Label } from "@/app/components/ui/label";
 
 const OrderForm = ({ onOrder, isLoading }) => {
   const [name, setName] = useState('');
   const [coffee, setCoffee] = useState(undefined);
   const [milk, setMilk] = useState(undefined);
   const [notes, setNotes] = useState('');
-  
-  // === CHANGE IS HERE ===
-  // 'extras' state is now an array to hold multiple selections.
-  const [extras, setExtras] = useState([]);
+  const [extras, setExtras] = useState([]); // State is an array for multiple selections
 
   const coffeeOptions = [
     'Espresso', 'Cappuccino', 'Latte', 'Long Black', 'Flat White', 'Piccolo', 'Iced Latte', 'Iced Long Black', 'Chai Latte'
@@ -26,18 +23,13 @@ const OrderForm = ({ onOrder, isLoading }) => {
   const milkOptions = ['None', 'Cow', 'Oat', 'Almond', 'Soy'];
   const extrasOptions = ['Extra shot', 'Sugar', 'Honey'];
 
-  // This function handles changes to the checkboxes.
+  // Handles adding/removing items from the extras array when a checkbox is clicked
   const handleExtrasChange = (extra) => {
-    setExtras(prevExtras => {
-      // If the extra is already selected, remove it (uncheck).
-      if (prevExtras.includes(extra)) {
-        return prevExtras.filter(item => item !== extra);
-      }
-      // Otherwise, add it to the list (check).
-      else {
-        return [...prevExtras, extra];
-      }
-    });
+    setExtras(prevExtras =>
+      prevExtras.includes(extra)
+        ? prevExtras.filter(item => item !== extra) // Remove if already selected
+        : [...prevExtras, extra] // Add if not selected
+    );
   };
 
   const handleOrderSubmit = (e) => {
@@ -52,7 +44,7 @@ const OrderForm = ({ onOrder, isLoading }) => {
       name: name.trim(),
       coffeeType: coffee,
       milkOption: milk,
-      extras: extras, // Pass the array of selected extras
+      extras: extras, // Pass the array of extras
       notes: notes,
     });
 
@@ -60,7 +52,7 @@ const OrderForm = ({ onOrder, isLoading }) => {
     setName('');
     setCoffee(undefined);
     setMilk(undefined);
-    setExtras([]); // Reset extras to an empty array
+    setExtras([]);
     setNotes('');
   };
 
@@ -108,7 +100,7 @@ const OrderForm = ({ onOrder, isLoading }) => {
               </SelectContent>
             </Select>
 
-            {/* === CHANGE IS HERE: Replaced dropdown with checkboxes === */}
+            {/* Replaced dropdown with checkboxes */}
             <div className="space-y-2">
                 <Label className="text-base text-gray-700">Extras (Optional)</Label>
                 <div className="flex items-center space-x-6 pt-2">
