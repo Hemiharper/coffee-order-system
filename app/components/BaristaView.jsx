@@ -35,7 +35,7 @@ const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating }) => {
         const name = order['Name'];
         const coffeeType = order['Coffee Type'];
         const milkOption = order['Milk Option'];
-        const extras = order['Extras']; // Get extras field
+        const extras = order['Extras'];
         const notes = order['Notes'];
         const isCollected = status === 'Collected';
 
@@ -52,8 +52,12 @@ const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating }) => {
               <p className="text-gray-600 flex items-center gap-2"><Milk className="w-4 h-4 text-gray-500" />{milkOption}</p>
               
               {/* === CHANGE IS HERE === */}
-              {extras && (
-                <p className="text-gray-600 flex items-center gap-2"><PlusCircle className="w-4 h-4 text-gray-500" />{extras}</p>
+              {extras && extras.length > 0 && (
+                <p className="text-gray-600 flex items-center gap-2">
+                    <PlusCircle className="w-4 h-4 text-gray-500" />
+                    {/* Join the array elements with a comma and space */}
+                    {extras.join(', ')}
+                </p>
               )}
 
               {notes && (
