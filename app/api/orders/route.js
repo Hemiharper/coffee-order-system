@@ -64,9 +64,9 @@ export async function POST(request) {
           'Coffee Type': coffeeType,
           'Milk Option': milkOption,
           // === FINAL FIX IS HERE ===
-          // This wraps the 'extras' string in an array, which is what Airtable's
-          // 'Multiple select' field type expects.
-          'Extras': extras ? [extras] : null, 
+          // This correctly passes the array of extras from the checkboxes to Airtable.
+          // It handles cases where no extras are selected by passing null.
+          'Extras': extras && extras.length > 0 ? extras : null, 
           'Notes': notes || '',
           'Status': 'Pending',
         }
