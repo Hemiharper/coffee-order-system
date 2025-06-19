@@ -46,12 +46,11 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  let body;
   try {
     const base = getAirtableBase();
-    const body = await request.json();
+    body = await request.json(); 
     
-    // === THIS IS THE KEY SECTION ===
-    // It correctly handles the 'extras' field from the form.
     const { name, coffeeType, milkOption, extras, notes } = body;
 
     if (!name || !coffeeType || !milkOption) {
@@ -64,13 +63,15 @@ export async function POST(request) {
           'Name': name,
           'Coffee Type': coffeeType,
           'Milk Option': milkOption,
-          'Extras': extras || null, // Save extras, or null if it's empty
+          // === FINAL FIX IS HERE ===
+          // This wraps the 'extras' string in an array, which is what Airtable's
+          // 'Multiple select' field type expects.
+          'Extras': extras ? [extras] : null, 
           'Notes': notes || '',
           'Status': 'Pending',
         }
       }
     ]);
-    // === END OF SECTION ===
 
     const newOrder = {
         id: createdRecords[0].id,
@@ -80,7 +81,10 @@ export async function POST(request) {
     return NextResponse.json(newOrder, { status: 201, headers: corsHeaders });
 
   } catch (error) {
-    console.error('--- AIRTABLE POST ERROR ---', error);
+    console.error('--- DETAILED AIRTABLE CREATION ERROR ---');
+    console.error('Request Body That Caused Error:', JSON.stringify(body, null, 2));
+    console.error('Full Error Object:', JSON.stringify(error, null, 2));
+    console.error('--- END OF ERROR DETAILS ---');
     return NextResponse.json({ message: 'Failed to create order', error: error.message }, { status: 500, headers: corsHeaders });
   }
 }
@@ -131,6 +135,6 @@ export async function DELETE(request) {
 
     } catch (error) {
         console.error('--- AIRTABLE DELETE ERROR ---', error);
-        return NextResponse.json({ message: 'Failed to cancel order', error: error.message }, { status: 500, headers: corsHeaders });
+        return NextResponse.json({ message: 'Failed to cancel order', error: 'An unexpected error occurred' }, { status: 500, headers: corsHeaders });
     }
 }
