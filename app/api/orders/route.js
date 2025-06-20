@@ -15,7 +15,7 @@ const getAirtableBase = () => {
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-control-allow-headers': 'Content-Type, Authorization',
 };
 
 // --- API Route Handlers ---
@@ -28,9 +28,20 @@ export async function OPTIONS(request) {
 export async function GET(request) {
   try {
     const base = getAirtableBase();
+
+    // === CHANGE IS HERE: Auto-hide old collected orders ===
+    // This formula tells Airtable to only return records that meet one of two conditions:
+    // 1. The status is NOT 'Collected'.
+    // 2. The status IS 'Collected', but the time since it was last modified is less than or equal to 5 minutes.
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const filterFormula = `OR(Status != 'Collected', AND(Status = 'Collected', {Collected Timestamp} > '${fiveMinutesAgo}'))`;
+
     const records = await base('Orders').select({
-      sort: [{ field: "Order Timestamp", direction: "asc" }]
+      sort: [{ field: "Order Timestamp", direction: "asc" }],
+      filterByFormula: filterFormula, // Apply the filter here
     }).all();
+    // === END OF CHANGE ===
+
 
     const orders = records.map(record => ({
       id: record.id,
@@ -63,9 +74,6 @@ export async function POST(request) {
           'Name': name,
           'Coffee Type': coffeeType,
           'Milk Option': milkOption,
-          // === FINAL FIX IS HERE ===
-          // This correctly passes the array of extras from the checkboxes to Airtable.
-          // It handles cases where no extras are selected by passing null.
           'Extras': extras && extras.length > 0 ? extras : null, 
           'Notes': notes || '',
           'Status': 'Pending',
