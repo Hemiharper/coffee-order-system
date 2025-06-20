@@ -1,4 +1,4 @@
-// app/page.js (Customer View - Fully Corrected)
+// app/page.js
 
 'use client';
 
@@ -13,21 +13,26 @@ import CustomerOrderStatus from '@/app/components/CustomerOrderStatus';
 import Link from 'next/link';
 
 export default function HomePage() {
-    // State to hold the ID of the order placed in THIS browser session.
     const [customerOrderId, setCustomerOrderId] = useState(null);
-    // State for the list of ALL orders from the server.
     const [allOrders, setAllOrders] = useState([]);
-    
     const [customerTab, setCustomerTab] = useState('order');
     const [showCancelAlert, setShowCancelAlert] = useState(false);
-    const [isLoading, setIsLoading] = useState(true); // Start as true on initial load
+    const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // --- STABILIZED FETCH LOGIC ---
-    // fetchOrders is wrapped in useCallback to prevent it from being recreated on every render.
-    // This is the key to stopping the infinite refresh loop.
+    // === CHANGE IS HERE: Load order ID from localStorage on initial mount ===
+    useEffect(() => {
+        // This code runs only once on the client-side after the component mounts.
+        const savedOrderId = localStorage.getItem('customerOrderId');
+        if (savedOrderId) {
+            setCustomerOrderId(savedOrderId);
+            // If we find a saved order, it makes sense to start on the status tab.
+            setCustomerTab('status'); 
+        }
+    }, []); // Empty dependency array ensures this runs only once.
+
+
     const fetchOrders = useCallback(async () => {
-        // We don't set isLoading to true here because polling should happen in the background.
         setError(null);
         try {
             const response = await fetch('/api/orders', { cache: 'no-store' });
@@ -41,29 +46,22 @@ export default function HomePage() {
             console.error('Failed to fetch orders:', err);
             setError(`Failed to load orders. A refresh may be needed.`);
         } finally {
-            // Only set isLoading to false on the initial load.
             setIsLoading(false);
         }
-    }, []); // Empty dependency array [] means this function is created only ONCE.
+    }, []);
 
-    // --- EFFECT FOR INITIAL LOAD AND POLLING ---
+
     useEffect(() => {
-        fetchOrders(); // Fetch immediately on component mount.
-
-        const interval = setInterval(() => {
-            fetchOrders(); // Poll for new data.
-        }, 5000); // Poll every 5 seconds.
-
-        // Cleanup function to stop polling when the component is removed.
+        fetchOrders();
+        const interval = setInterval(fetchOrders, 5000);
         return () => clearInterval(interval);
-    }, [fetchOrders]); // This effect now correctly and safely depends on the stable fetchOrders function.
+    }, [fetchOrders]);
 
-    // --- Handler for placing a new order ---
+
     const handleOrder = async (orderDetails) => {
         setIsLoading(true);
         setError(null);
         try {
-            console.log('Sending order data:', orderDetails);
             const response = await fetch('/api/orders', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -76,9 +74,12 @@ export default function HomePage() {
             }
             
             const newOrder = await response.json();
-            setCustomerOrderId(newOrder.id); // IMPORTANT: Track the ID of the order we just placed.
-            await fetchOrders(); // Refresh orders to include the new one.
-            setCustomerTab('status'); // Switch to status view.
+            // === CHANGE IS HERE: Save the new order ID to state and localStorage ===
+            setCustomerOrderId(newOrder.id);
+            localStorage.setItem('customerOrderId', newOrder.id);
+            
+            await fetchOrders();
+            setCustomerTab('status');
             
         } catch (err) {
             console.error('Failed to place order:', err);
@@ -88,19 +89,20 @@ export default function HomePage() {
         }
     };
 
-    // --- Handler for cancelling an order ---
+
     const cancelOrder = async (orderId) => {
-        // Use a simple custom modal/confirm if needed, avoiding window.confirm for robustness
-        // For now, we proceed directly for simplicity.
         setIsLoading(true);
         setError(null);
         try {
             const response = await fetch(`/api/orders?id=${orderId}`, { method: 'DELETE' });
 
             if (response.ok) {
+                // === CHANGE IS HERE: Remove the order ID from state and localStorage ===
+                setCustomerOrderId(null);
+                localStorage.removeItem('customerOrderId');
+
                 await fetchOrders();
-                setCustomerOrderId(null); // Untrack the order ID
-                setCustomerTab('order'); // Go back to the order form
+                setCustomerTab('order');
                 setShowCancelAlert(true);
                 setTimeout(() => setShowCancelAlert(false), 4000);
             } else {
@@ -115,8 +117,21 @@ export default function HomePage() {
         }
     };
     
-    // Find the specific order that belongs to this customer's session.
+
     const myOrder = allOrders.find(order => order.id === customerOrderId);
+
+    // === CHANGE IS HERE: If an order is marked as "Collected", clear it from localStorage ===
+    // This effect runs whenever 'myOrder' changes.
+    useEffect(() => {
+        if (myOrder && myOrder.Status === 'Collected') {
+            // Set a timeout to clear the order after a short delay so the user can see the "Collected" status.
+            setTimeout(() => {
+                setCustomerOrderId(null);
+                localStorage.removeItem('customerOrderId');
+            }, 3000); // 3-second delay
+        }
+    }, [myOrder]);
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 p-3 sm:p-6">
@@ -145,7 +160,7 @@ export default function HomePage() {
                             </TabsTrigger>
                         </TabsList>
 
-                        <div className="mt-8 min-h-[250px]"> {/* Added min-height to prevent layout shifts */}
+                        <div className="mt-8 min-h-[250px]">
                             {error && (
                                 <Alert variant="destructive" className="mb-4">
                                     <AlertDescription>{error}</AlertDescription>
@@ -167,7 +182,6 @@ export default function HomePage() {
                                     <p className="text-center text-gray-500 pt-8">Loading...</p>
                                 ) : myOrder ? (
                                     <CustomerOrderStatus
-                                        // Pass ONLY the customer's order to the status component
                                         order={myOrder}
                                         onCancelOrder={cancelOrder}
                                     />
