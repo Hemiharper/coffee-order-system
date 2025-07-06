@@ -20,16 +20,13 @@ export default function HomePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // === CHANGE IS HERE: Load order ID from localStorage on initial mount ===
     useEffect(() => {
-        // This code runs only once on the client-side after the component mounts.
         const savedOrderId = localStorage.getItem('customerOrderId');
         if (savedOrderId) {
             setCustomerOrderId(savedOrderId);
-            // If we find a saved order, it makes sense to start on the status tab.
             setCustomerTab('status'); 
         }
-    }, []); // Empty dependency array ensures this runs only once.
+    }, []);
 
 
     const fetchOrders = useCallback(async () => {
@@ -74,7 +71,6 @@ export default function HomePage() {
             }
             
             const newOrder = await response.json();
-            // === CHANGE IS HERE: Save the new order ID to state and localStorage ===
             setCustomerOrderId(newOrder.id);
             localStorage.setItem('customerOrderId', newOrder.id);
             
@@ -97,7 +93,6 @@ export default function HomePage() {
             const response = await fetch(`/api/orders?id=${orderId}`, { method: 'DELETE' });
 
             if (response.ok) {
-                // === CHANGE IS HERE: Remove the order ID from state and localStorage ===
                 setCustomerOrderId(null);
                 localStorage.removeItem('customerOrderId');
 
@@ -117,21 +112,39 @@ export default function HomePage() {
         }
     };
     
+    // === NEW FUNCTION TO HANDLE CUSTOMER-SIDE COLLECTION ===
+    const handleMarkCollected = async (orderId) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const response = await fetch('/api/orders', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: orderId, status: 'Collected' }),
+            });
+
+            if (response.ok) {
+                // Clear the order from localStorage and state now that it's collected.
+                setCustomerOrderId(null);
+                localStorage.removeItem('customerOrderId');
+                // Switch back to the order form.
+                setCustomerTab('order'); 
+            } else {
+                 const errorData = await response.json();
+                throw new Error(errorData.message || `Failed to mark order as collected: HTTP status ${response.status}`);
+            }
+        } catch(err) {
+            console.error('Failed to mark collected:', err);
+            setError(`Failed to mark order as collected: ${err.message}`);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const myOrder = allOrders.find(order => order.id === customerOrderId);
 
-    // === CHANGE IS HERE: If an order is marked as "Collected", clear it from localStorage ===
-    // This effect runs whenever 'myOrder' changes.
-    useEffect(() => {
-        if (myOrder && myOrder.Status === 'Collected') {
-            // Set a timeout to clear the order after a short delay so the user can see the "Collected" status.
-            setTimeout(() => {
-                setCustomerOrderId(null);
-                localStorage.removeItem('customerOrderId');
-            }, 3000); // 3-second delay
-        }
-    }, [myOrder]);
-
+    // === REMOVED: The automatic clearing logic has been removed. ===
+    // The order will now only be cleared when the user clicks the button.
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 p-3 sm:p-6">
@@ -184,6 +197,7 @@ export default function HomePage() {
                                     <CustomerOrderStatus
                                         order={myOrder}
                                         onCancelOrder={cancelOrder}
+                                        onMarkCollected={handleMarkCollected} // Pass the new handler down
                                     />
                                 ) : (
                                     <p className="text-center text-gray-500 pt-8">
