@@ -22,16 +22,9 @@ export default function HomePage() {
     
     const prevMyOrderRef = useRef();
 
-    // === NOTIFICATION AND DATA LOADING LOGIC START ===
+    // === NOTIFICATION LOGIC START ===
 
-    // 1. Ask for notification permission on initial load
-    useEffect(() => {
-        if (typeof window !== 'undefined' && "Notification" in window && Notification.permission !== "granted") {
-            Notification.requestPermission();
-        }
-    }, []);
-
-    // 2. Load the customer's order ID from localStorage
+    // This effect now ONLY loads the order ID from localStorage.
     useEffect(() => {
         const savedOrderId = localStorage.getItem('customerOrderId');
         if (savedOrderId) {
@@ -42,24 +35,30 @@ export default function HomePage() {
 
     const myOrder = allOrders.find(order => order.id === customerOrderId);
 
-    // 3. Watch for the order status to change to "Ready" and trigger notification
+    // This effect now safely watches for the status change to trigger a notification.
     useEffect(() => {
         const prevMyOrder = prevMyOrderRef.current;
         
         if (myOrder && prevMyOrder && prevMyOrder.Status !== 'Ready' && myOrder.Status === 'Ready') {
             if (Notification.permission === "granted") {
-                const spotNumber = myOrder['Collection Spot'] ? `at spot #${myOrder['Collection Spot']}` : '';
-                new Notification("Your coffee is ready!", {
-                    body: `Your ${myOrder['Coffee Type']} is ready for pickup ${spotNumber}.`,
-                    icon: "/favicon.ico"
-                });
+                // Defensive check to ensure coffee type exists before creating the notification.
+                const coffeeType = myOrder['Coffee Type'];
+                if (coffeeType) {
+                    const spotNumber = myOrder['Collection Spot'] ? `at spot #${myOrder['Collection Spot']}` : '';
+                    const notificationBody = `Your ${coffeeType} is ready for pickup ${spotNumber}.`;
+                    
+                    new Notification("Your coffee is ready!", {
+                        body: notificationBody,
+                        icon: "/favicon.ico"
+                    });
+                }
             }
         }
         
         prevMyOrderRef.current = myOrder;
     }, [myOrder]);
 
-    // === NOTIFICATION AND DATA LOADING LOGIC END ===
+    // === NOTIFICATION LOGIC END ===
 
 
     const fetchOrders = useCallback(async () => {
@@ -92,8 +91,13 @@ export default function HomePage() {
         setIsLoading(true);
         setError(null);
         try {
+            // Permission is now only requested on user action (placing an order).
             if ("Notification" in window && Notification.permission !== "granted") {
-                await Notification.requestPermission();
+                const permission = await Notification.requestPermission();
+                // Optional: handle the case where the user denies permission.
+                if (permission !== 'granted') {
+                    console.log('Notification permission was denied.');
+                }
             }
 
             const response = await fetch('/api/orders', {
