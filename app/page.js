@@ -24,7 +24,44 @@ export default function HomePage() {
 
     // === NOTIFICATION LOGIC START ===
 
-    // This effect now ONLY loads the order ID from localStorage.
+    // This is now a dedicated, safe function for showing the notification.
+    const showReadyNotification = (order) => {
+        // Ensure this code only runs in the browser and permission has been granted.
+        if (typeof window === 'undefined' || !("Notification" in window) || Notification.permission !== "granted") {
+            return;
+        }
+
+        // Defensive check to ensure all data is present before firing.
+        const coffeeType = order?.['Coffee Type'];
+        if (!coffeeType) {
+            return;
+        }
+
+        const spotNumber = order['Collection Spot'] ? `at spot #${order['Collection Spot']}` : '';
+        const notificationBody = `Your ${coffeeType} is ready for pickup ${spotNumber}.`;
+        
+        new Notification("Your coffee is ready!", {
+            body: notificationBody,
+            icon: "/favicon.ico" // Using a relative path for the icon
+        });
+    };
+
+    const myOrder = allOrders.find(order => order.id === customerOrderId);
+
+    // This effect now safely watches for the status change and calls our dedicated function.
+    useEffect(() => {
+        const prevMyOrder = prevMyOrderRef.current;
+        
+        if (myOrder && prevMyOrder && prevMyOrder.Status !== 'Ready' && myOrder.Status === 'Ready') {
+            showReadyNotification(myOrder);
+        }
+        
+        prevMyOrderRef.current = myOrder;
+    }, [myOrder]);
+
+    // === NOTIFICATION LOGIC END ===
+
+
     useEffect(() => {
         const savedOrderId = localStorage.getItem('customerOrderId');
         if (savedOrderId) {
@@ -32,33 +69,6 @@ export default function HomePage() {
             setCustomerTab('status'); 
         }
     }, []);
-
-    const myOrder = allOrders.find(order => order.id === customerOrderId);
-
-    // This effect now safely watches for the status change to trigger a notification.
-    useEffect(() => {
-        const prevMyOrder = prevMyOrderRef.current;
-        
-        if (myOrder && prevMyOrder && prevMyOrder.Status !== 'Ready' && myOrder.Status === 'Ready') {
-            if (Notification.permission === "granted") {
-                // Defensive check to ensure coffee type exists before creating the notification.
-                const coffeeType = myOrder['Coffee Type'];
-                if (coffeeType) {
-                    const spotNumber = myOrder['Collection Spot'] ? `at spot #${myOrder['Collection Spot']}` : '';
-                    const notificationBody = `Your ${coffeeType} is ready for pickup ${spotNumber}.`;
-                    
-                    new Notification("Your coffee is ready!", {
-                        body: notificationBody,
-                        icon: "/favicon.ico"
-                    });
-                }
-            }
-        }
-        
-        prevMyOrderRef.current = myOrder;
-    }, [myOrder]);
-
-    // === NOTIFICATION LOGIC END ===
 
 
     const fetchOrders = useCallback(async () => {
@@ -91,13 +101,9 @@ export default function HomePage() {
         setIsLoading(true);
         setError(null);
         try {
-            // Permission is now only requested on user action (placing an order).
+            // Permission is still requested on user action for best compatibility.
             if ("Notification" in window && Notification.permission !== "granted") {
-                const permission = await Notification.requestPermission();
-                // Optional: handle the case where the user denies permission.
-                if (permission !== 'granted') {
-                    console.log('Notification permission was denied.');
-                }
+                await Notification.requestPermission();
             }
 
             const response = await fetch('/api/orders', {
@@ -136,7 +142,6 @@ export default function HomePage() {
             if (response.ok) {
                 setCustomerOrderId(null);
                 localStorage.removeItem('customerOrderId');
-
                 await fetchOrders();
                 setCustomerTab('order');
                 setShowCancelAlert(true);
