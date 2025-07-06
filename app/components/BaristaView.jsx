@@ -3,7 +3,7 @@
 import React from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
-import { Coffee, Clock, Check, Package, User, FileText, Milk, PlusCircle } from 'lucide-react';
+import { Coffee, Clock, Check, Package, User, FileText, Milk, PlusCircle, MapPin } from 'lucide-react';
 
 const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating }) => {
   if (!orders || orders.length === 0) {
@@ -37,6 +37,7 @@ const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating }) => {
         const milkOption = order['Milk Option'];
         const extras = order['Extras'];
         const notes = order['Notes'];
+        const collectionSpot = order['Collection Spot']; // Get the collection spot number
         const isCollected = status === 'Collected';
 
         return (
@@ -44,18 +45,24 @@ const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating }) => {
             <CardContent className="p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <p className="font-bold text-lg flex items-center gap-2"><User className="w-5 h-5 text-gray-500" />{name}</p>
-                <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full ${status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : status === 'Ready' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
-                  {status}
-                </span>
+                {/* === CHANGE IS HERE === */}
+                {status === 'Ready' && collectionSpot ? (
+                    <div className="text-lg font-bold bg-blue-100 text-blue-800 px-3 py-1 rounded-full flex items-center gap-2">
+                        <MapPin className="w-4 h-4" />
+                        <span>#{collectionSpot}</span>
+                    </div>
+                ) : (
+                    <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full ${status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
+                        {status}
+                    </span>
+                )}
               </div>
               <p className="text-gray-800 flex items-center gap-2"><Coffee className="w-4 h-4 text-gray-500" />{coffeeType}</p>
               <p className="text-gray-600 flex items-center gap-2"><Milk className="w-4 h-4 text-gray-500" />{milkOption}</p>
               
-              {/* === CHANGE IS HERE === */}
               {extras && extras.length > 0 && (
                 <p className="text-gray-600 flex items-center gap-2">
                     <PlusCircle className="w-4 h-4 text-gray-500" />
-                    {/* Join the array elements with a comma and space */}
                     {extras.join(', ')}
                 </p>
               )}
