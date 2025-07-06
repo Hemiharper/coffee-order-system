@@ -15,20 +15,21 @@ const OrderForm = ({ onOrder, isLoading }) => {
   const [coffee, setCoffee] = useState(undefined);
   const [milk, setMilk] = useState(undefined);
   const [notes, setNotes] = useState('');
-  const [extras, setExtras] = useState([]); // State is an array for multiple selections
+  const [extras, setExtras] = useState([]);
 
   const coffeeOptions = [
     'Espresso', 'Cappuccino', 'Latte', 'Long Black', 'Flat White', 'Piccolo', 'Iced Latte', 'Iced Long Black', 'Chai Latte'
   ];
   const milkOptions = ['None', 'Cow', 'Oat', 'Almond', 'Soy'];
-  const extrasOptions = ['Extra shot', 'Sugar', 'Honey'];
+  
+  // === CHANGE IS HERE ===
+  const extrasOptions = ['Extra shot', 'Sugar', 'Honey', 'Decaf'];
 
-  // Handles adding/removing items from the extras array when a checkbox is clicked
   const handleExtrasChange = (extra) => {
     setExtras(prevExtras =>
       prevExtras.includes(extra)
-        ? prevExtras.filter(item => item !== extra) // Remove if already selected
-        : [...prevExtras, extra] // Add if not selected
+        ? prevExtras.filter(item => item !== extra)
+        : [...prevExtras, extra]
     );
   };
 
@@ -44,11 +45,10 @@ const OrderForm = ({ onOrder, isLoading }) => {
       name: name.trim(),
       coffeeType: coffee,
       milkOption: milk,
-      extras: extras, // Pass the array of extras
+      extras: extras,
       notes: notes,
     });
 
-    // Reset form after submission
     setName('');
     setCoffee(undefined);
     setMilk(undefined);
@@ -100,7 +100,6 @@ const OrderForm = ({ onOrder, isLoading }) => {
               </SelectContent>
             </Select>
 
-            {/* Replaced dropdown with checkboxes */}
             <div className="space-y-2">
                 <Label className="text-base text-gray-700">Extras (Optional)</Label>
                 <div className="flex items-center space-x-6 pt-2">
