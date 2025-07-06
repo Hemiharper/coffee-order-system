@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/app/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
@@ -19,6 +19,43 @@ export default function HomePage() {
     const [showCancelAlert, setShowCancelAlert] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    
+    // Ref to store the previous state of the order to detect changes
+    const prevMyOrderRef = useRef();
+
+    // === NOTIFICATION LOGIC START ===
+
+    // 1. Ask for permission as soon as the page loads
+    useEffect(() => {
+        if ("Notification" in window && Notification.permission !== "granted") {
+            Notification.requestPermission();
+        }
+    }, []);
+
+    const myOrder = allOrders.find(order => order.id === customerOrderId);
+
+    // 2. Watch for the order status to change to "Ready"
+    useEffect(() => {
+        const prevMyOrder = prevMyOrderRef.current;
+        
+        // Check if the order exists and its status has just changed to "Ready"
+        if (myOrder && prevMyOrder && prevMyOrder.Status !== 'Ready' && myOrder.Status === 'Ready') {
+            // Check if permission has been granted
+            if (Notification.permission === "granted") {
+                const spotNumber = myOrder['Collection Spot'] ? `at spot #${myOrder['Collection Spot']}` : '';
+                new Notification("Your coffee is ready!", {
+                    body: `Your ${myOrder['Coffee Type']} is ready for pickup ${spotNumber}.`,
+                    icon: "/favicon.ico" // Optional: adds an icon to the notification
+                });
+            }
+        }
+        
+        // Update the ref with the current order state for the next render
+        prevMyOrderRef.current = myOrder;
+    }, [myOrder]); // This effect runs whenever myOrder changes
+
+    // === NOTIFICATION LOGIC END ===
+
 
     useEffect(() => {
         const savedOrderId = localStorage.getItem('customerOrderId');
@@ -59,6 +96,11 @@ export default function HomePage() {
         setIsLoading(true);
         setError(null);
         try {
+            // Request notification permission when an order is placed, if not already granted
+            if ("Notification" in window && Notification.permission !== "granted") {
+                await Notification.requestPermission();
+            }
+
             const response = await fetch('/api/orders', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -112,7 +154,6 @@ export default function HomePage() {
         }
     };
     
-    // === NEW FUNCTION TO HANDLE CUSTOMER-SIDE COLLECTION ===
     const handleMarkCollected = async (orderId) => {
         setIsLoading(true);
         setError(null);
@@ -124,10 +165,8 @@ export default function HomePage() {
             });
 
             if (response.ok) {
-                // Clear the order from localStorage and state now that it's collected.
                 setCustomerOrderId(null);
                 localStorage.removeItem('customerOrderId');
-                // Switch back to the order form.
                 setCustomerTab('order'); 
             } else {
                  const errorData = await response.json();
@@ -140,11 +179,6 @@ export default function HomePage() {
             setIsLoading(false);
         }
     };
-
-    const myOrder = allOrders.find(order => order.id === customerOrderId);
-
-    // === REMOVED: The automatic clearing logic has been removed. ===
-    // The order will now only be cleared when the user clicks the button.
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 p-3 sm:p-6">
@@ -197,7 +231,7 @@ export default function HomePage() {
                                     <CustomerOrderStatus
                                         order={myOrder}
                                         onCancelOrder={cancelOrder}
-                                        onMarkCollected={handleMarkCollected} // Pass the new handler down
+                                        onMarkCollected={handleMarkCollected}
                                     />
                                 ) : (
                                     <p className="text-center text-gray-500 pt-8">
