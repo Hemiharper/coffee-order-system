@@ -5,7 +5,8 @@ import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Coffee, Clock, Check, XCircle, Package, PlusCircle, Milk, MapPin } from 'lucide-react';
 
-export default function CustomerOrderStatus({ order, onCancelOrder }) {
+// The new onMarkCollected prop is added to handle the new button's action.
+export default function CustomerOrderStatus({ order, onCancelOrder, onMarkCollected }) {
   if (!order) {
     return <p className="text-center text-gray-500 py-16">Your order status will appear here.</p>;
   }
@@ -22,7 +23,7 @@ export default function CustomerOrderStatus({ order, onCancelOrder }) {
   const extras = order['Extras'];
   const notes = order['Notes'];
   const orderTimestamp = order['Order Timestamp'];
-  const collectionSpot = order['Collection Spot']; // Get the collection spot number
+  const collectionSpot = order['Collection Spot'];
 
   return (
     <Card className="shadow-md border-2 border-gray-200">
@@ -66,9 +67,8 @@ export default function CustomerOrderStatus({ order, onCancelOrder }) {
                   </Button>
                 </>
               )}
-              {/* === CHANGE IS HERE === */}
               {status === 'Ready' && (
-                <div className="text-right">
+                <div className="text-right space-y-3">
                     <span className="flex items-center justify-end text-green-600 font-medium text-lg">
                         <Check className="w-5 h-5 mr-2" /> Ready for pickup!
                     </span>
@@ -78,6 +78,10 @@ export default function CustomerOrderStatus({ order, onCancelOrder }) {
                             <span>Spot #{collectionSpot}</span>
                         </div>
                     )}
+                    {/* === NEW BUTTON IS HERE === */}
+                    <Button onClick={() => onMarkCollected(order.id)} className="bg-green-600 hover:bg-green-700">
+                        <Check className="mr-2 h-4 w-4" /> I've Collected My Order
+                    </Button>
                 </div>
               )}
               {status === 'Collected' && (
