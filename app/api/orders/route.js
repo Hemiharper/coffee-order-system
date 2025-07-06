@@ -15,7 +15,7 @@ const getAirtableBase = () => {
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
-  'Access-control-allow-headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
 // --- API Route Handlers ---
@@ -28,20 +28,13 @@ export async function OPTIONS(request) {
 export async function GET(request) {
   try {
     const base = getAirtableBase();
-
-    // === CHANGE IS HERE: Auto-hide old collected orders ===
-    // This formula tells Airtable to only return records that meet one of two conditions:
-    // 1. The status is NOT 'Collected'.
-    // 2. The status IS 'Collected', but the time since it was last modified is less than or equal to 5 minutes.
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     const filterFormula = `OR(Status != 'Collected', AND(Status = 'Collected', {Collected Timestamp} > '${fiveMinutesAgo}'))`;
 
     const records = await base('Orders').select({
       sort: [{ field: "Order Timestamp", direction: "asc" }],
-      filterByFormula: filterFormula, // Apply the filter here
+      filterByFormula: filterFormula,
     }).all();
-    // === END OF CHANGE ===
-
 
     const orders = records.map(record => ({
       id: record.id,
@@ -89,30 +82,70 @@ export async function POST(request) {
     return NextResponse.json(newOrder, { status: 201, headers: corsHeaders });
 
   } catch (error) {
-    console.error('--- DETAILED AIRTABLE CREATION ERROR ---');
+    console.error('--- DETAILED AIRTABLE CREATION ERROR ---', error);
     console.error('Request Body That Caused Error:', JSON.stringify(body, null, 2));
     console.error('Full Error Object:', JSON.stringify(error, null, 2));
-    console.error('--- END OF ERROR DETAILS ---');
     return NextResponse.json({ message: 'Failed to create order', error: error.message }, { status: 500, headers: corsHeaders });
   }
 }
 
 export async function PATCH(request) {
+    let body;
     try {
         const base = getAirtableBase();
-        const { id, status } = await request.json();
+        body = await request.json();
+        const { id, status: newStatus } = body;
 
-        if (!id || !status) {
+        if (!id || !newStatus) {
             return NextResponse.json({ message: 'Missing required fields for update' }, { status: 400, headers: corsHeaders });
         }
         
         const validStatuses = ['Pending', 'Ready', 'Collected'];
-        if (!validStatuses.includes(status)) {
+        if (!validStatuses.includes(newStatus)) {
             return NextResponse.json({ message: `Invalid status` }, { status: 400, headers: corsHeaders });
         }
 
+        let fieldsToUpdate = { 'Status': newStatus };
+
+        // === NEW BARMAT LOGIC STARTS HERE ===
+
+        // If the order is being marked as "Ready"
+        if (newStatus === 'Ready') {
+            // 1. Find all spots currently in use.
+            const readyOrders = await base('Orders').select({
+                filterByFormula: "{Status} = 'Ready'",
+                fields: ["Collection Spot"]
+            }).all();
+            
+            const usedSpots = readyOrders.map(record => record.get('Collection Spot')).filter(Boolean);
+
+            // 2. Find the next available spot from 1 to 20.
+            let nextAvailableSpot = -1;
+            for (let i = 1; i <= 20; i++) {
+                if (!usedSpots.includes(i)) {
+                    nextAvailableSpot = i;
+                    break;
+                }
+            }
+
+            // 3. If a spot is available, assign it. Otherwise, return an error.
+            if (nextAvailableSpot !== -1) {
+                fieldsToUpdate['Collection Spot'] = nextAvailableSpot;
+            } else {
+                return NextResponse.json({ message: 'Error: All collection spots are currently full.' }, { status: 409 }); // 409 Conflict
+            }
+        }
+        
+        // If the order is being marked as "Collected" or "Pending" (reverted), free up its spot.
+        if (newStatus === 'Collected' || newStatus === 'Pending') {
+            fieldsToUpdate['Collection Spot'] = null;
+        }
+        
+        // === NEW BARMAT LOGIC ENDS HERE ===
+
+
         const updatedRecords = await base('Orders').update([
-            { id: id, fields: { 'Status': status } }
+            { id: id, fields: fieldsToUpdate }
         ]);
 
         const updatedOrder = {
@@ -124,6 +157,7 @@ export async function PATCH(request) {
 
     } catch (error) {
         console.error('--- AIRTABLE PATCH ERROR ---', error);
+        console.error('Request Body That Caused Error:', JSON.stringify(body, null, 2));
         return NextResponse.json({ message: 'Failed to update order', error: error.message }, { status: 500, headers: corsHeaders });
     }
 }
