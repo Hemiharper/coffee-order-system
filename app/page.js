@@ -1,8 +1,8 @@
-// app/page.js
+// app/page.js (Stable Rollback)
 
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/app/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
@@ -19,49 +19,8 @@ export default function HomePage() {
     const [showCancelAlert, setShowCancelAlert] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    
-    const prevMyOrderRef = useRef();
 
-    // === NOTIFICATION LOGIC START ===
-
-    // This is now a dedicated, safe function for showing the notification.
-    const showReadyNotification = (order) => {
-        // Ensure this code only runs in the browser and permission has been granted.
-        if (typeof window === 'undefined' || !("Notification" in window) || Notification.permission !== "granted") {
-            return;
-        }
-
-        // Defensive check to ensure all data is present before firing.
-        const coffeeType = order?.['Coffee Type'];
-        if (!coffeeType) {
-            return;
-        }
-
-        const spotNumber = order['Collection Spot'] ? `at spot #${order['Collection Spot']}` : '';
-        const notificationBody = `Your ${coffeeType} is ready for pickup ${spotNumber}.`;
-        
-        new Notification("Your coffee is ready!", {
-            body: notificationBody,
-            icon: "/favicon.ico" // Using a relative path for the icon
-        });
-    };
-
-    const myOrder = allOrders.find(order => order.id === customerOrderId);
-
-    // This effect now safely watches for the status change and calls our dedicated function.
-    useEffect(() => {
-        const prevMyOrder = prevMyOrderRef.current;
-        
-        if (myOrder && prevMyOrder && prevMyOrder.Status !== 'Ready' && myOrder.Status === 'Ready') {
-            showReadyNotification(myOrder);
-        }
-        
-        prevMyOrderRef.current = myOrder;
-    }, [myOrder]);
-
-    // === NOTIFICATION LOGIC END ===
-
-
+    // Load order ID from localStorage on initial mount
     useEffect(() => {
         const savedOrderId = localStorage.getItem('customerOrderId');
         if (savedOrderId) {
@@ -101,11 +60,6 @@ export default function HomePage() {
         setIsLoading(true);
         setError(null);
         try {
-            // Permission is still requested on user action for best compatibility.
-            if ("Notification" in window && Notification.permission !== "granted") {
-                await Notification.requestPermission();
-            }
-
             const response = await fetch('/api/orders', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -183,6 +137,8 @@ export default function HomePage() {
             setIsLoading(false);
         }
     };
+
+    const myOrder = allOrders.find(order => order.id === customerOrderId);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 p-3 sm:p-6">
