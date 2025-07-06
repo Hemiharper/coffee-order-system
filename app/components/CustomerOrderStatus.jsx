@@ -3,7 +3,7 @@
 import React from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
-import { Coffee, Clock, Check, XCircle, Package, PlusCircle, Milk } from 'lucide-react';
+import { Coffee, Clock, Check, XCircle, Package, PlusCircle, Milk, MapPin } from 'lucide-react';
 
 export default function CustomerOrderStatus({ order, onCancelOrder }) {
   if (!order) {
@@ -22,6 +22,7 @@ export default function CustomerOrderStatus({ order, onCancelOrder }) {
   const extras = order['Extras'];
   const notes = order['Notes'];
   const orderTimestamp = order['Order Timestamp'];
+  const collectionSpot = order['Collection Spot']; // Get the collection spot number
 
   return (
     <Card className="shadow-md border-2 border-gray-200">
@@ -37,11 +38,9 @@ export default function CustomerOrderStatus({ order, onCancelOrder }) {
                 <span>{milkOption}</span>
               </div>
               
-              {/* === CHANGE IS HERE === */}
               {extras && extras.length > 0 && (
                 <div className="flex items-center gap-3 text-sm text-gray-600">
                   <PlusCircle className="w-4 h-4" />
-                  {/* Join the array elements with a comma and space */}
                   <span>{extras.join(', ')}</span>
                 </div>
               )}
@@ -67,10 +66,19 @@ export default function CustomerOrderStatus({ order, onCancelOrder }) {
                   </Button>
                 </>
               )}
+              {/* === CHANGE IS HERE === */}
               {status === 'Ready' && (
-                <span className="flex items-center text-green-600 font-medium text-lg">
-                  <Check className="w-5 h-5 mr-2" /> Ready for pickup!
-                </span>
+                <div className="text-right">
+                    <span className="flex items-center justify-end text-green-600 font-medium text-lg">
+                        <Check className="w-5 h-5 mr-2" /> Ready for pickup!
+                    </span>
+                    {collectionSpot && (
+                        <div className="flex items-center justify-end text-lg font-bold mt-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-md">
+                            <MapPin className="w-5 h-5 mr-2" />
+                            <span>Spot #{collectionSpot}</span>
+                        </div>
+                    )}
+                </div>
               )}
               {status === 'Collected' && (
                 <span className="flex items-center text-blue-600 font-medium text-lg">
