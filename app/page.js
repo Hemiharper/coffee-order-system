@@ -20,43 +20,18 @@ export default function HomePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     
-    // Ref to store the previous state of the order to detect changes
     const prevMyOrderRef = useRef();
 
-    // === NOTIFICATION LOGIC START ===
+    // === NOTIFICATION AND DATA LOADING LOGIC START ===
 
-    // 1. Ask for permission as soon as the page loads
+    // 1. Ask for notification permission on initial load
     useEffect(() => {
-        if ("Notification" in window && Notification.permission !== "granted") {
+        if (typeof window !== 'undefined' && "Notification" in window && Notification.permission !== "granted") {
             Notification.requestPermission();
         }
     }, []);
 
-    const myOrder = allOrders.find(order => order.id === customerOrderId);
-
-    // 2. Watch for the order status to change to "Ready"
-    useEffect(() => {
-        const prevMyOrder = prevMyOrderRef.current;
-        
-        // Check if the order exists and its status has just changed to "Ready"
-        if (myOrder && prevMyOrder && prevMyOrder.Status !== 'Ready' && myOrder.Status === 'Ready') {
-            // Check if permission has been granted
-            if (Notification.permission === "granted") {
-                const spotNumber = myOrder['Collection Spot'] ? `at spot #${myOrder['Collection Spot']}` : '';
-                new Notification("Your coffee is ready!", {
-                    body: `Your ${myOrder['Coffee Type']} is ready for pickup ${spotNumber}.`,
-                    icon: "/favicon.ico" // Optional: adds an icon to the notification
-                });
-            }
-        }
-        
-        // Update the ref with the current order state for the next render
-        prevMyOrderRef.current = myOrder;
-    }, [myOrder]); // This effect runs whenever myOrder changes
-
-    // === NOTIFICATION LOGIC END ===
-
-
+    // 2. Load the customer's order ID from localStorage
     useEffect(() => {
         const savedOrderId = localStorage.getItem('customerOrderId');
         if (savedOrderId) {
@@ -64,6 +39,27 @@ export default function HomePage() {
             setCustomerTab('status'); 
         }
     }, []);
+
+    const myOrder = allOrders.find(order => order.id === customerOrderId);
+
+    // 3. Watch for the order status to change to "Ready" and trigger notification
+    useEffect(() => {
+        const prevMyOrder = prevMyOrderRef.current;
+        
+        if (myOrder && prevMyOrder && prevMyOrder.Status !== 'Ready' && myOrder.Status === 'Ready') {
+            if (Notification.permission === "granted") {
+                const spotNumber = myOrder['Collection Spot'] ? `at spot #${myOrder['Collection Spot']}` : '';
+                new Notification("Your coffee is ready!", {
+                    body: `Your ${myOrder['Coffee Type']} is ready for pickup ${spotNumber}.`,
+                    icon: "/favicon.ico"
+                });
+            }
+        }
+        
+        prevMyOrderRef.current = myOrder;
+    }, [myOrder]);
+
+    // === NOTIFICATION AND DATA LOADING LOGIC END ===
 
 
     const fetchOrders = useCallback(async () => {
@@ -96,7 +92,6 @@ export default function HomePage() {
         setIsLoading(true);
         setError(null);
         try {
-            // Request notification permission when an order is placed, if not already granted
             if ("Notification" in window && Notification.permission !== "granted") {
                 await Notification.requestPermission();
             }
