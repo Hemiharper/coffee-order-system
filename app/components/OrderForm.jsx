@@ -21,8 +21,6 @@ const OrderForm = ({ onOrder, isLoading }) => {
     'Espresso', 'Cappuccino', 'Latte', 'Long Black', 'Flat White', 'Piccolo', 'Iced Latte', 'Iced Long Black', 'Chai Latte'
   ];
   const milkOptions = ['None', 'Cow', 'Oat', 'Almond', 'Soy'];
-  
-  // === CHANGE IS HERE ===
   const extrasOptions = ['Extra shot', 'Sugar', 'Honey', 'Decaf'];
 
   const handleExtrasChange = (extra) => {
@@ -100,9 +98,10 @@ const OrderForm = ({ onOrder, isLoading }) => {
               </SelectContent>
             </Select>
 
+            {/* === CHANGE IS HERE: Added flex-wrap and gap for responsiveness === */}
             <div className="space-y-2">
                 <Label className="text-base text-gray-700">Extras (Optional)</Label>
-                <div className="flex items-center space-x-6 pt-2">
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-2">
                     {extrasOptions.map((option) => (
                         <div key={option} className="flex items-center space-x-2">
                             <Checkbox
