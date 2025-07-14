@@ -1,4 +1,4 @@
-// app/page.js (Stable Rollback)
+// app/page.js
 
 'use client';
 
@@ -20,7 +20,28 @@ export default function HomePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Load order ID from localStorage on initial mount
+    // === NEW DYNAMIC TITLE LOGIC START ===
+    useEffect(() => {
+        const originalTitle = document.title;
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                document.title = "Check your brew!";
+            } else {
+                document.title = originalTitle;
+            }
+        };
+
+        // Add the event listener when the component mounts
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        // Return a cleanup function to remove the listener when the component unmounts
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
+    }, []); // Empty dependency array ensures this runs only once.
+    // === NEW DYNAMIC TITLE LOGIC END ===
+
+
     useEffect(() => {
         const savedOrderId = localStorage.getItem('customerOrderId');
         if (savedOrderId) {
