@@ -22,7 +22,7 @@ const OrderForm = ({ onOrder, isLoading }) => {
     'Espresso', 'Cappuccino', 'Latte', 'Long Black', 'Flat White', 'Piccolo', 'Iced Latte', 'Iced Long Black', 'Chai Latte', 'Mocha'
   ];
 
-  const milkOptions = ['None', 'Milk', 'Oat', 'Almond', 'Soy', 'Skim Milk'];
+  const milkOptions = ['None', 'Milk', 'Skim Milk', 'Oat', 'Almond', 'Soy'];
   
   const extrasOptions = ['Extra shot', 'Sugar', 'Honey', 'Decaf'];
   // === END OF CHANGES ===
