@@ -17,11 +17,15 @@ const OrderForm = ({ onOrder, isLoading }) => {
   const [notes, setNotes] = useState('');
   const [extras, setExtras] = useState([]);
 
+  // === CHANGES ARE HERE ===
   const coffeeOptions = [
-    'Espresso', 'Cappuccino', 'Latte', 'Long Black', 'Flat White', 'Piccolo', 'Iced Latte', 'Iced Long Black', 'Chai Latte'
+    'Espresso', 'Cappuccino', 'Latte', 'Long Black', 'Flat White', 'Piccolo', 'Iced Latte', 'Iced Long Black', 'Chai Latte', 'Mocha'
   ];
-  const milkOptions = ['None', 'Cow', 'Oat', 'Almond', 'Soy'];
+
+  const milkOptions = ['None', 'Milk', 'Oat', 'Almond', 'Soy', 'Skim Milk'];
+  
   const extrasOptions = ['Extra shot', 'Sugar', 'Honey', 'Decaf'];
+  // === END OF CHANGES ===
 
   const handleExtrasChange = (extra) => {
     setExtras(prevExtras =>
@@ -98,7 +102,6 @@ const OrderForm = ({ onOrder, isLoading }) => {
               </SelectContent>
             </Select>
 
-            {/* === CHANGE IS HERE: Added flex-wrap and gap for responsiveness === */}
             <div className="space-y-2">
                 <Label className="text-base text-gray-700">Extras (Optional)</Label>
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-2">
