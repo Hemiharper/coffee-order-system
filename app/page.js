@@ -6,10 +6,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/app/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
-import { Coffee, Clock, Eye } from 'lucide-react';
+import { Coffee, Clock, Eye, Users } from 'lucide-react'; // Added Users icon
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import OrderForm from '@/app/components/OrderForm';
 import CustomerOrderStatus from '@/app/components/CustomerOrderStatus';
+import QueueView from '@/app/components/QueueView'; // Import the new component
 import Link from 'next/link';
 
 export default function HomePage() {
@@ -148,17 +149,20 @@ export default function HomePage() {
                             <Coffee className="w-7 h-7 sm:w-8 sm:h-8" />
                             Big Brews
                         </div>
-                        {/* === BARISTA VIEW BUTTON REMOVED FROM HERE === */}
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="px-6">
+                    {/* === CHANGE IS HERE: Added a third tab === */}
                     <Tabs value={customerTab} onValueChange={setCustomerTab} className="w-full">
-                        <TabsList className="w-full grid grid-cols-2 h-14 text-base">
+                        <TabsList className="w-full grid grid-cols-3 h-14 text-base">
                             <TabsTrigger value="order" className="flex items-center gap-2">
                                 <Coffee className="w-5 h-5" /> Place Order
                             </TabsTrigger>
                             <TabsTrigger value="status" className="flex items-center gap-2">
                                 <Clock className="w-5 h-5" /> Order Status
+                            </TabsTrigger>
+                            <TabsTrigger value="queue" className="flex items-center gap-2">
+                                <Users className="w-5 h-5" /> Queue
                             </TabsTrigger>
                         </TabsList>
 
@@ -193,6 +197,11 @@ export default function HomePage() {
                                         Your order status will appear here once you've placed an order.
                                     </p>
                                 )}
+                            </TabsContent>
+
+                            {/* === CHANGE IS HERE: Added the content for the new tab === */}
+                            <TabsContent value="queue" className="mt-0">
+                                <QueueView orders={allOrders} customerOrderId={customerOrderId} />
                             </TabsContent>
                         </div>
                     </Tabs>
