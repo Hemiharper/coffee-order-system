@@ -74,10 +74,10 @@ const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating, recentlyReadyOrd
                         )}
                     </div>
                     {/* Large centered spot number */}
-                    <div className="w-full flex items-center justify-center my-4">
-                        <div className="bg-blue-100 text-blue-800 rounded-lg p-4 flex items-center gap-3">
-                            <MapPin className="w-8 h-8" />
-                            <span className="text-6xl font-extrabold">#{collectionSpot}</span>
+                    <div className="w-full flex items-center justify-center my-2">
+                        <div className="bg-blue-100 text-blue-800 rounded-lg p-3 flex items-center gap-3">
+                            <MapPin className="w-7 h-7" />
+                            <span className="text-5xl font-extrabold">{collectionSpot}</span>
                         </div>
                     </div>
                 </div>
