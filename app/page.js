@@ -6,11 +6,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/app/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
-import { Coffee, Clock, Eye, Users } from 'lucide-react'; // Added Users icon
+import { Coffee, Clock, Eye, Users } from 'lucide-react';
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import OrderForm from '@/app/components/OrderForm';
 import CustomerOrderStatus from '@/app/components/CustomerOrderStatus';
-import QueueView from '@/app/components/QueueView'; // Import the new component
+import QueueView from '@/app/components/QueueView';
 import Link from 'next/link';
 
 export default function HomePage() {
@@ -152,18 +152,21 @@ export default function HomePage() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="px-6">
-                    {/* This extra div is a structural change to force a full re-render */}
                     <div>
                         <Tabs value={customerTab} onValueChange={setCustomerTab} className="w-full">
-                            <TabsList className="w-full grid grid-cols-3 h-14 text-base">
-                                <TabsTrigger value="order" className="flex items-center gap-2">
-                                    <Coffee className="w-5 h-5" /> Place Order
+                            {/* === CHANGE IS HERE: Updated class for responsiveness === */}
+                            <TabsList className="w-full grid grid-cols-3 h-auto text-center">
+                                <TabsTrigger value="order" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 text-xs sm:text-sm">
+                                    <Coffee className="w-5 h-5" />
+                                    <span>Place Order</span>
                                 </TabsTrigger>
-                                <TabsTrigger value="status" className="flex items-center gap-2">
-                                    <Clock className="w-5 h-5" /> Order Status
+                                <TabsTrigger value="status" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 text-xs sm:text-sm">
+                                    <Clock className="w-5 h-5" />
+                                    <span>Order Status</span>
                                 </TabsTrigger>
-                                <TabsTrigger value="queue" className="flex items-center gap-2">
-                                    <Users className="w-5 h-5" /> Queue
+                                <TabsTrigger value="queue" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 text-xs sm:text-sm">
+                                    <Users className="w-5 h-5" />
+                                    <span>Queue</span>
                                 </TabsTrigger>
                             </TabsList>
 
