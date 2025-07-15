@@ -51,35 +51,45 @@ const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating, recentlyReadyOrd
 
         return (
           <Card key={order.id} className={`flex flex-col justify-between transition-all duration-500 ${isCollected ? 'opacity-60 bg-gray-50' : 'bg-white shadow-md'} ${isRecentlyReady ? 'ring-2 ring-blue-500 shadow-lg' : ''}`}>
-            <CardContent className="p-4 space-y-3">
-              <div className="flex justify-between items-center">
-                <p className="font-bold text-lg flex items-center gap-2"><User className="w-5 h-5 text-gray-500" />{name}</p>
-                {status === 'Ready' && collectionSpot ? (
-                    <div className="text-2xl font-bold bg-blue-100 text-blue-800 px-4 py-2 rounded-full flex items-center gap-2">
-                        <MapPin className="w-6 h-6" />
-                        <span>#{collectionSpot}</span>
-                    </div>
-                ) : (
+            {/* === UI CHANGE IS HERE === */}
+            {/* The content of the card now changes dramatically based on the order status. */}
+            <CardContent className="p-4 flex-grow flex flex-col">
+              {status === 'Ready' && collectionSpot ? (
+                // BIG NUMBER DISPLAY for "Ready" orders
+                <div className="flex-grow flex flex-col items-center justify-center text-center">
+                  <p className="font-bold text-xl text-gray-800">{name}</p>
+                  <p className="text-gray-600 mb-2">{coffeeType}</p>
+                  <div className="my-auto">
+                    <p className="text-lg text-gray-500">Spot</p>
+                    <p className="text-8xl font-black text-blue-600 leading-none">#{collectionSpot}</p>
+                  </div>
+                </div>
+              ) : (
+                // Standard display for "Pending" and "Collected" orders
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <p className="font-bold text-lg flex items-center gap-2"><User className="w-5 h-5 text-gray-500" />{name}</p>
                     <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full ${status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
-                        {status}
+                      {status}
                     </span>
-                )}
-              </div>
-              <p className="text-gray-800 flex items-center gap-2"><Coffee className="w-4 h-4 text-gray-500" />{coffeeType}</p>
-              <p className="text-gray-600 flex items-center gap-2"><Milk className="w-4 h-4 text-gray-500" />{milkOption}</p>
-              
-              {extras && extras.length > 0 && (
-                <p className="text-gray-600 flex items-center gap-2">
-                    <PlusCircle className="w-4 h-4 text-gray-500" />
-                    {extras.join(', ')}
-                </p>
-              )}
+                  </div>
+                  <p className="text-gray-800 flex items-center gap-2"><Coffee className="w-4 h-4 text-gray-500" />{coffeeType}</p>
+                  <p className="text-gray-600 flex items-center gap-2"><Milk className="w-4 h-4 text-gray-500" />{milkOption}</p>
+                  
+                  {extras && extras.length > 0 && (
+                    <p className="text-gray-600 flex items-center gap-2">
+                        <PlusCircle className="w-4 h-4 text-gray-500" />
+                        {extras.join(', ')}
+                    </p>
+                  )}
 
-              {notes && (
-                <p className="text-sm text-gray-600 bg-gray-100 p-2 rounded-md flex items-start gap-2">
-                  <FileText className="w-4 h-4 mt-0.5 text-gray-500 flex-shrink-0" />
-                  <span>{notes}</span>
-                </p>
+                  {notes && (
+                    <p className="text-sm text-gray-600 bg-gray-100 p-2 rounded-md flex items-start gap-2">
+                      <FileText className="w-4 h-4 mt-0.5 text-gray-500 flex-shrink-0" />
+                      <span>{notes}</span>
+                    </p>
+                  )}
+                </div>
               )}
             </CardContent>
             <div className="p-4 bg-gray-50 border-t flex justify-end gap-2">
