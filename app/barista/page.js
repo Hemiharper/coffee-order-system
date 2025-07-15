@@ -14,8 +14,8 @@ export default function BaristaPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isUpdating, setIsUpdating] = useState(false);
     const [error, setError] = useState(null);
-    // New state to track the ID of the order just marked as "Ready"
-    const [recentlyReadyOrderId, setRecentlyReadyOrderId] = useState(null);
+    // State is now an array to handle multiple "sticky" orders
+    const [recentlyReadyOrderIds, setRecentlyReadyOrderIds] = useState([]);
 
     const fetchOrders = useCallback(async () => {
         setError(null);
@@ -56,16 +56,15 @@ export default function BaristaPage() {
             if (response.ok) {
                 await fetchOrders();
                 
-                // === NEW LOGIC START ===
-                // If an order was just marked as "Ready", track its ID.
+                // If an order was just marked as "Ready", add its ID to the sticky array.
                 if (newStatus === 'Ready') {
-                    setRecentlyReadyOrderId(orderId);
-                    // After 10 seconds, clear the "sticky" state, allowing it to sort normally.
+                    setRecentlyReadyOrderIds(prevIds => [...prevIds, orderId]);
+                    
+                    // After 10 seconds, remove this specific ID from the array.
                     setTimeout(() => {
-                        setRecentlyReadyOrderId(null);
+                        setRecentlyReadyOrderIds(prevIds => prevIds.filter(id => id !== orderId));
                     }, 10000);
                 }
-                // === NEW LOGIC END ===
 
             } else {
                 const errorData = await response.json();
@@ -103,8 +102,8 @@ export default function BaristaPage() {
                             orders={orders}
                             onUpdateOrderStatus={updateOrderStatus}
                             isUpdating={isUpdating}
-                            // Pass the new state down as a prop
-                            recentlyReadyOrderId={recentlyReadyOrderId}
+                            // Pass the array of sticky IDs
+                            recentlyReadyOrderIds={recentlyReadyOrderIds}
                         />
                     )}
                 </CardContent>
