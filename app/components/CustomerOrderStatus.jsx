@@ -5,7 +5,6 @@ import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Coffee, Clock, Check, XCircle, Package, PlusCircle, Milk, MapPin } from 'lucide-react';
 
-// The new onMarkCollected prop is added to handle the new button's action.
 export default function CustomerOrderStatus({ order, onCancelOrder, onMarkCollected }) {
   if (!order) {
     return <p className="text-center text-gray-500 py-16">Your order status will appear here.</p>;
@@ -78,16 +77,23 @@ export default function CustomerOrderStatus({ order, onCancelOrder, onMarkCollec
                             <span>Spot #{collectionSpot}</span>
                         </div>
                     )}
-                    {/* === NEW BUTTON IS HERE === */}
                     <Button onClick={() => onMarkCollected(order.id)} className="bg-green-600 hover:bg-green-700">
                         <Check className="mr-2 h-4 w-4" /> I've Collected My Order
                     </Button>
                 </div>
               )}
+              {/* === CHANGE IS HERE === */}
               {status === 'Collected' && (
-                <span className="flex items-center text-blue-600 font-medium text-lg">
-                  <Package className="w-5 h-5 mr-2" /> Collected
-                </span>
+                <div className="text-right space-y-2">
+                    <span className="flex items-center justify-end text-blue-600 font-medium text-lg">
+                      <Package className="w-5 h-5 mr-2" /> Collected
+                    </span>
+                    {collectionSpot && (
+                        <span className="text-sm text-gray-500">
+                            (from Spot #{collectionSpot})
+                        </span>
+                    )}
+                </div>
               )}
             </div>
           </div>
