@@ -152,7 +152,6 @@ export default function HomePage() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="px-6">
-                    {/* === CHANGE IS HERE: Added a third tab === */}
                     <Tabs value={customerTab} onValueChange={setCustomerTab} className="w-full">
                         <TabsList className="w-full grid grid-cols-3 h-14 text-base">
                             <TabsTrigger value="order" className="flex items-center gap-2">
@@ -184,8 +183,9 @@ export default function HomePage() {
                             </TabsContent>
 
                             <TabsContent value="status" className="mt-0">
+                                {/* Trivial change to force a rebuild */}
                                 {isLoading && !myOrder ? (
-                                    <p className="text-center text-gray-500 pt-8">Loading...</p>
+                                    <p className="text-center text-gray-500 pt-8">Loading Orders...</p>
                                 ) : myOrder ? (
                                     <CustomerOrderStatus
                                         order={myOrder}
@@ -199,7 +199,6 @@ export default function HomePage() {
                                 )}
                             </TabsContent>
 
-                            {/* === CHANGE IS HERE: Added the content for the new tab === */}
                             <TabsContent value="queue" className="mt-0">
                                 <QueueView orders={allOrders} customerOrderId={customerOrderId} />
                             </TabsContent>
