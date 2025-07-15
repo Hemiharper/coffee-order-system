@@ -14,8 +14,8 @@ export default function BaristaPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isUpdating, setIsUpdating] = useState(false);
     const [error, setError] = useState(null);
-    // State is now an array to handle multiple "sticky" orders
-    const [recentlyReadyOrderIds, setRecentlyReadyOrderIds] = useState([]);
+    // New state to track the ID of the order just marked as "Ready"
+    const [recentlyReadyOrderId, setRecentlyReadyOrderId] = useState(null);
 
     const fetchOrders = useCallback(async () => {
         setError(null);
@@ -54,20 +54,18 @@ export default function BaristaPage() {
             });
 
             if (response.ok) {
-                // === FIX IS HERE: The state is now updated BEFORE the data is re-fetched ===
-                // This prevents a timing issue where the new order list would arrive before
-                // the app knew which order to make "sticky".
+                await fetchOrders();
+                
+                // === NEW LOGIC START ===
+                // If an order was just marked as "Ready", track its ID.
                 if (newStatus === 'Ready') {
-                    setRecentlyReadyOrderIds(prevIds => [...prevIds, orderId]);
-                    
-                    // After 10 seconds, remove this specific ID from the array.
+                    setRecentlyReadyOrderId(orderId);
+                    // After 10 seconds, clear the "sticky" state, allowing it to sort normally.
                     setTimeout(() => {
-                        setRecentlyReadyOrderIds(prevIds => prevIds.filter(id => id !== orderId));
+                        setRecentlyReadyOrderId(null);
                     }, 10000);
                 }
-                
-                // Now, re-fetch the orders to get the latest data from the server.
-                await fetchOrders();
+                // === NEW LOGIC END ===
 
             } else {
                 const errorData = await response.json();
@@ -105,8 +103,8 @@ export default function BaristaPage() {
                             orders={orders}
                             onUpdateOrderStatus={updateOrderStatus}
                             isUpdating={isUpdating}
-                            // Pass the array of sticky IDs
-                            recentlyReadyOrderIds={recentlyReadyOrderIds}
+                            // Pass the new state down as a prop
+                            recentlyReadyOrderId={recentlyReadyOrderId}
                         />
                     )}
                 </CardContent>
