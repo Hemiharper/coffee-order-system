@@ -20,28 +20,6 @@ export default function HomePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // === NEW DYNAMIC TITLE LOGIC START ===
-    useEffect(() => {
-        const originalTitle = document.title;
-        const handleVisibilityChange = () => {
-            if (document.hidden) {
-                document.title = "Check your brew!";
-            } else {
-                document.title = originalTitle;
-            }
-        };
-
-        // Add the event listener when the component mounts
-        document.addEventListener("visibilitychange", handleVisibilityChange);
-
-        // Return a cleanup function to remove the listener when the component unmounts
-        return () => {
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
-        };
-    }, []); // Empty dependency array ensures this runs only once.
-    // === NEW DYNAMIC TITLE LOGIC END ===
-
-
     useEffect(() => {
         const savedOrderId = localStorage.getItem('customerOrderId');
         if (savedOrderId) {
@@ -170,11 +148,7 @@ export default function HomePage() {
                             <Coffee className="w-7 h-7 sm:w-8 sm:h-8" />
                             Big Brews
                         </div>
-                        <Link href="/barista">
-                            <Button variant="outline" className="flex items-center gap-2 text-sm">
-                                <Eye className="w-4 h-4" /> Barista View
-                            </Button>
-                        </Link>
+                        {/* === BARISTA VIEW BUTTON REMOVED FROM HERE === */}
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="px-6">
