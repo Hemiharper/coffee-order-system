@@ -54,9 +54,9 @@ export default function BaristaPage() {
             });
 
             if (response.ok) {
-                await fetchOrders();
-                
-                // If an order was just marked as "Ready", add its ID to the sticky array.
+                // === FIX IS HERE: The state is now updated BEFORE the data is re-fetched ===
+                // This prevents a timing issue where the new order list would arrive before
+                // the app knew which order to make "sticky".
                 if (newStatus === 'Ready') {
                     setRecentlyReadyOrderIds(prevIds => [...prevIds, orderId]);
                     
@@ -65,6 +65,9 @@ export default function BaristaPage() {
                         setRecentlyReadyOrderIds(prevIds => prevIds.filter(id => id !== orderId));
                     }, 10000);
                 }
+                
+                // Now, re-fetch the orders to get the latest data from the server.
+                await fetchOrders();
 
             } else {
                 const errorData = await response.json();
