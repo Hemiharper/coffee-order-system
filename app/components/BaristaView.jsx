@@ -84,17 +84,9 @@ const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating, recentlyReadyOrd
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <p className="font-bold text-lg flex items-center gap-2"><User className="w-5 h-5 text-gray-500" />{name}</p>
-                    {/* === CHANGE IS HERE === */}
-                    {isCollected && collectionSpot ? (
-                        <div className="text-sm font-bold bg-gray-200 text-gray-600 px-2 py-1 rounded-full flex items-center gap-1">
-                            <MapPin className="w-4 h-4" />
-                            <span>Spot {collectionSpot}</span>
-                        </div>
-                    ) : (
-                        <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full ${status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
-                          {status}
-                        </span>
-                    )}
+                    <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full ${status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
+                      {status}
+                    </span>
                   </div>
                   <p className="text-gray-800 flex items-center gap-2"><Coffee className="w-4 h-4 text-gray-500" />{coffeeType}</p>
                   <p className="text-gray-600 flex items-center gap-2"><Milk className="w-4 h-4 text-gray-500" />{milkOption}</p>
@@ -127,8 +119,11 @@ const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating, recentlyReadyOrd
                   Mark as Collected
                 </Button>
               )}
+              {/* === CHANGE IS HERE === */}
               {status === 'Collected' && (
-                <p className="text-sm text-gray-500 italic w-full text-right">Order complete</p>
+                <p className="text-sm text-gray-500 italic w-full text-right">
+                  Order complete {collectionSpot ? `(Spot ${collectionSpot})` : ''}
+                </p>
               )}
             </div>
           </Card>
