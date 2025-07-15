@@ -54,11 +54,26 @@ const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating, recentlyReadyOrd
             <CardContent className="p-4 flex-grow flex flex-col">
               {status === 'Ready' && collectionSpot ? (
                 // === NEW "READY" LAYOUT ===
-                <div className="flex-grow flex flex-col items-start justify-between text-left">
-                    <div>
+                <div className="flex-grow flex flex-col justify-between text-left">
+                    {/* Top section with order details */}
+                    <div className="space-y-2">
                         <p className="font-bold text-2xl text-gray-800">{name}</p>
                         <p className="text-lg text-gray-600">{coffeeType}</p>
+                        <p className="text-gray-600 flex items-center gap-2 pt-2"><Milk className="w-4 h-4 text-gray-500" />{milkOption}</p>
+                        {extras && extras.length > 0 && (
+                            <p className="text-gray-600 flex items-center gap-2">
+                                <PlusCircle className="w-4 h-4 text-gray-500" />
+                                {extras.join(', ')}
+                            </p>
+                        )}
+                        {notes && (
+                            <p className="text-sm text-gray-600 bg-gray-100 p-2 rounded-md flex items-start gap-2">
+                                <FileText className="w-4 h-4 mt-0.5 text-gray-500 flex-shrink-0" />
+                                <span>{notes}</span>
+                            </p>
+                        )}
                     </div>
+                    {/* Large centered spot number */}
                     <div className="w-full flex items-center justify-center my-4">
                         <div className="bg-blue-100 text-blue-800 rounded-lg p-4 flex items-center gap-3">
                             <MapPin className="w-8 h-8" />
