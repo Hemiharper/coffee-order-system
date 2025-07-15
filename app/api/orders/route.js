@@ -82,7 +82,7 @@ export async function POST(request) {
     return NextResponse.json(newOrder, { status: 201, headers: corsHeaders });
 
   } catch (error) {
-    console.error('--- DETAILED AIRTABLE CREATION ERROR ---', error);
+    console.error('--- DETAILED AIRTABLE CREATION ERROR ---');
     console.error('Request Body That Caused Error:', JSON.stringify(body, null, 2));
     console.error('Full Error Object:', JSON.stringify(error, null, 2));
     return NextResponse.json({ message: 'Failed to create order', error: error.message }, { status: 500, headers: corsHeaders });
@@ -107,11 +107,7 @@ export async function PATCH(request) {
 
         let fieldsToUpdate = { 'Status': newStatus };
 
-        // === NEW BARMAT LOGIC STARTS HERE ===
-
-        // If the order is being marked as "Ready"
         if (newStatus === 'Ready') {
-            // 1. Find all spots currently in use.
             const readyOrders = await base('Orders').select({
                 filterByFormula: "{Status} = 'Ready'",
                 fields: ["Collection Spot"]
@@ -119,7 +115,6 @@ export async function PATCH(request) {
             
             const usedSpots = readyOrders.map(record => record.get('Collection Spot')).filter(Boolean);
 
-            // 2. Find the next available spot from 1 to 20.
             let nextAvailableSpot = -1;
             for (let i = 1; i <= 20; i++) {
                 if (!usedSpots.includes(i)) {
@@ -128,22 +123,19 @@ export async function PATCH(request) {
                 }
             }
 
-            // 3. If a spot is available, assign it. Otherwise, return an error.
             if (nextAvailableSpot !== -1) {
                 fieldsToUpdate['Collection Spot'] = nextAvailableSpot;
             } else {
-                return NextResponse.json({ message: 'Error: All collection spots are currently full.' }, { status: 409 }); // 409 Conflict
+                return NextResponse.json({ message: 'Error: All collection spots are currently full.' }, { status: 409 });
             }
         }
         
-        // If the order is being marked as "Collected" or "Pending" (reverted), free up its spot.
-        if (newStatus === 'Collected' || newStatus === 'Pending') {
+        // === CHANGE IS HERE ===
+        // The spot is now only cleared if an order is moved back to "Pending".
+        if (newStatus === 'Pending') {
             fieldsToUpdate['Collection Spot'] = null;
         }
         
-        // === NEW BARMAT LOGIC ENDS HERE ===
-
-
         const updatedRecords = await base('Orders').update([
             { id: id, fields: fieldsToUpdate }
         ]);
