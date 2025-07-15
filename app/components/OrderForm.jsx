@@ -24,7 +24,7 @@ const OrderForm = ({ onOrder, isLoading }) => {
 
   const milkOptions = ['None', 'Milk', 'Skim Milk', 'Oat', 'Almond', 'Soy'];
   
-  const extrasOptions = ['Extra shot', 'Sugar', 'Honey', 'Decaf'];
+  const extrasOptions = ['Large', 'Extra shot', 'Sugar', 'Honey', 'Decaf'];
   // === END OF CHANGES ===
 
   const handleExtrasChange = (extra) => {
