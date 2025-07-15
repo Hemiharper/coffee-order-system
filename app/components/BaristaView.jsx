@@ -51,18 +51,20 @@ const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating, recentlyReadyOrd
 
         return (
           <Card key={order.id} className={`flex flex-col justify-between transition-all duration-500 ${isCollected ? 'opacity-60 bg-gray-50' : 'bg-white shadow-md'} ${isRecentlyReady ? 'ring-2 ring-blue-500 shadow-lg' : ''}`}>
-            {/* === UI CHANGE IS HERE === */}
-            {/* The content of the card now changes dramatically based on the order status. */}
             <CardContent className="p-4 flex-grow flex flex-col">
               {status === 'Ready' && collectionSpot ? (
-                // BIG NUMBER DISPLAY for "Ready" orders
-                <div className="flex-grow flex flex-col items-center justify-center text-center">
-                  <p className="font-bold text-xl text-gray-800">{name}</p>
-                  <p className="text-gray-600 mb-2">{coffeeType}</p>
-                  <div className="my-auto">
-                    <p className="text-lg text-gray-500">Spot</p>
-                    <p className="text-8xl font-black text-blue-600 leading-none">#{collectionSpot}</p>
-                  </div>
+                // === NEW "READY" LAYOUT ===
+                <div className="flex-grow flex flex-col items-start justify-between text-left">
+                    <div>
+                        <p className="font-bold text-2xl text-gray-800">{name}</p>
+                        <p className="text-lg text-gray-600">{coffeeType}</p>
+                    </div>
+                    <div className="w-full flex items-center justify-center my-4">
+                        <div className="bg-blue-100 text-blue-800 rounded-lg p-4 flex items-center gap-3">
+                            <MapPin className="w-8 h-8" />
+                            <span className="text-6xl font-extrabold">#{collectionSpot}</span>
+                        </div>
+                    </div>
                 </div>
               ) : (
                 // Standard display for "Pending" and "Collected" orders
