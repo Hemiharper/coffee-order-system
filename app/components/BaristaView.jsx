@@ -53,9 +53,8 @@ const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating, recentlyReadyOrd
           <Card key={order.id} className={`flex flex-col justify-between transition-all duration-500 ${isCollected ? 'opacity-60 bg-gray-50' : 'bg-white shadow-md'} ${isRecentlyReady ? 'ring-2 ring-blue-500 shadow-lg' : ''}`}>
             <CardContent className="p-4 flex-grow flex flex-col">
               {status === 'Ready' && collectionSpot ? (
-                // === NEW "READY" LAYOUT ===
+                // "READY" LAYOUT
                 <div className="flex-grow flex flex-col justify-between text-left">
-                    {/* Top section with order details */}
                     <div className="space-y-2">
                         <p className="font-bold text-2xl text-gray-800">{name}</p>
                         <p className="text-lg text-gray-600">{coffeeType}</p>
@@ -73,7 +72,6 @@ const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating, recentlyReadyOrd
                             </p>
                         )}
                     </div>
-                    {/* Large centered spot number */}
                     <div className="w-full flex items-center justify-center my-2">
                         <div className="bg-blue-100 text-blue-800 rounded-lg p-3 flex items-center gap-3">
                             <MapPin className="w-7 h-7" />
@@ -82,13 +80,21 @@ const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating, recentlyReadyOrd
                     </div>
                 </div>
               ) : (
-                // Standard display for "Pending" and "Collected" orders
+                // "PENDING" & "COLLECTED" LAYOUT
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <p className="font-bold text-lg flex items-center gap-2"><User className="w-5 h-5 text-gray-500" />{name}</p>
-                    <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full ${status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
-                      {status}
-                    </span>
+                    {/* === CHANGE IS HERE === */}
+                    {isCollected && collectionSpot ? (
+                        <div className="text-sm font-bold bg-gray-200 text-gray-600 px-2 py-1 rounded-full flex items-center gap-1">
+                            <MapPin className="w-4 h-4" />
+                            <span>Spot {collectionSpot}</span>
+                        </div>
+                    ) : (
+                        <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full ${status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {status}
+                        </span>
+                    )}
                   </div>
                   <p className="text-gray-800 flex items-center gap-2"><Coffee className="w-4 h-4 text-gray-500" />{coffeeType}</p>
                   <p className="text-gray-600 flex items-center gap-2"><Milk className="w-4 h-4 text-gray-500" />{milkOption}</p>
