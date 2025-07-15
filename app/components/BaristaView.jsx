@@ -5,8 +5,7 @@ import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Coffee, Clock, Check, Package, User, FileText, Milk, PlusCircle, MapPin } from 'lucide-react';
 
-// Receive the new recentlyReadyOrderId prop
-const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating, recentlyReadyOrderId }) => {
+const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating, recentlyReadyOrderIds }) => {
   if (!orders || orders.length === 0) {
     return (
       <div className="text-center py-16">
@@ -17,13 +16,13 @@ const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating, recentlyReadyOrd
     );
   }
 
-  // === UPDATED SORTING LOGIC ===
   const sortedOrders = [...orders].sort((a, b) => {
-    // 1. If an order is the "recently ready" one, it always comes first.
-    if (a.id === recentlyReadyOrderId) return -1;
-    if (b.id === recentlyReadyOrderId) return 1;
+    const aIsRecent = recentlyReadyOrderIds.includes(a.id);
+    const bIsRecent = recentlyReadyOrderIds.includes(b.id);
 
-    // 2. Otherwise, use the existing status-based sorting.
+    if (aIsRecent && !bIsRecent) return -1;
+    if (!aIsRecent && bIsRecent) return 1;
+
     const statusPriority = { 'Pending': 1, 'Ready': 2, 'Collected': 3 };
     const statusA = a['Status'] || 'Collected';
     const statusB = b['Status'] || 'Collected';
@@ -31,7 +30,6 @@ const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating, recentlyReadyOrd
       return statusPriority[statusA] - statusPriority[statusB];
     }
 
-    // 3. Finally, sort by timestamp.
     const timeA = new Date(a['Order Timestamp'] || 0);
     const timeB = new Date(b['Order Timestamp'] || 0);
     return timeA - timeB;
@@ -49,18 +47,16 @@ const BaristaView = ({ orders, onUpdateOrderStatus, isUpdating, recentlyReadyOrd
         const collectionSpot = order['Collection Spot'];
         const isCollected = status === 'Collected';
         
-        // Check if this card is the "sticky" one
-        const isRecentlyReady = order.id === recentlyReadyOrderId;
+        const isRecentlyReady = recentlyReadyOrderIds.includes(order.id);
 
         return (
-          // Add a visual highlight to the "sticky" card
           <Card key={order.id} className={`flex flex-col justify-between transition-all duration-500 ${isCollected ? 'opacity-60 bg-gray-50' : 'bg-white shadow-md'} ${isRecentlyReady ? 'ring-2 ring-blue-500 shadow-lg' : ''}`}>
             <CardContent className="p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <p className="font-bold text-lg flex items-center gap-2"><User className="w-5 h-5 text-gray-500" />{name}</p>
                 {status === 'Ready' && collectionSpot ? (
-                    <div className="text-lg font-bold bg-blue-100 text-blue-800 px-3 py-1 rounded-full flex items-center gap-2">
-                        <MapPin className="w-4 h-4" />
+                    <div className="text-2xl font-bold bg-blue-100 text-blue-800 px-4 py-2 rounded-full flex items-center gap-2">
+                        <MapPin className="w-6 h-6" />
                         <span>#{collectionSpot}</span>
                     </div>
                 ) : (
