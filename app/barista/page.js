@@ -14,8 +14,7 @@ export default function BaristaPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isUpdating, setIsUpdating] = useState(false);
     const [error, setError] = useState(null);
-    // New state to track the ID of the order just marked as "Ready"
-    const [recentlyReadyOrderId, setRecentlyReadyOrderId] = useState(null);
+    const [recentlyReadyOrderIds, setRecentlyReadyOrderIds] = useState([]);
 
     const fetchOrders = useCallback(async () => {
         setError(null);
@@ -46,6 +45,13 @@ export default function BaristaPage() {
     const updateOrderStatus = async (orderId, newStatus) => {
         setIsUpdating(true);
         setError(null);
+
+        // === NEW ROBUST LOGIC ===
+        // 1. Optimistically add the order to the "sticky" list for instant UI feedback.
+        if (newStatus === 'Ready') {
+            setRecentlyReadyOrderIds(prevIds => [...prevIds, orderId]);
+        }
+
         try {
             const response = await fetch('/api/orders', {
                 method: 'PATCH',
@@ -54,21 +60,22 @@ export default function BaristaPage() {
             });
 
             if (response.ok) {
+                // 2. Refresh the order list from the server.
                 await fetchOrders();
                 
-                // === NEW LOGIC START ===
-                // If an order was just marked as "Ready", track its ID.
+                // 3. If the update was successful, set a timer to remove the order from the sticky list.
                 if (newStatus === 'Ready') {
-                    setRecentlyReadyOrderId(orderId);
-                    // After 10 seconds, clear the "sticky" state, allowing it to sort normally.
                     setTimeout(() => {
-                        setRecentlyReadyOrderId(null);
-                    }, 10000);
+                        setRecentlyReadyOrderIds(prevIds => prevIds.filter(id => id !== orderId));
+                    }, 10000); // 10 seconds
                 }
-                // === NEW LOGIC END ===
 
             } else {
                 const errorData = await response.json();
+                // 4. If the API call fails, remove the order from the sticky list to prevent confusion.
+                if (newStatus === 'Ready') {
+                    setRecentlyReadyOrderIds(prevIds => prevIds.filter(id => id !== orderId));
+                }
                 throw new Error(errorData.message || `Failed to update order status: HTTP status ${response.status}`);
             }
         } catch (err) {
@@ -103,8 +110,7 @@ export default function BaristaPage() {
                             orders={orders}
                             onUpdateOrderStatus={updateOrderStatus}
                             isUpdating={isUpdating}
-                            // Pass the new state down as a prop
-                            recentlyReadyOrderId={recentlyReadyOrderId}
+                            recentlyReadyOrderIds={recentlyReadyOrderIds}
                         />
                     )}
                 </CardContent>
