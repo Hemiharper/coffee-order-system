@@ -147,63 +147,65 @@ export default function HomePage() {
                     <CardTitle className="flex items-center justify-between text-2xl sm:text-3xl font-bold">
                         <div className="flex items-center gap-3">
                             <Coffee className="w-7 h-7 sm:w-8 sm:h-8" />
-                            Big Brews TEST
+                            Big Brews
                         </div>
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="px-6">
-                    <Tabs value={customerTab} onValueChange={setCustomerTab} className="w-full">
-                        <TabsList className="w-full grid grid-cols-3 h-14 text-base">
-                            <TabsTrigger value="order" className="flex items-center gap-2">
-                                <Coffee className="w-5 h-5" /> Place Order
-                            </TabsTrigger>
-                            <TabsTrigger value="status" className="flex items-center gap-2">
-                                <Clock className="w-5 h-5" /> Order Status
-                            </TabsTrigger>
-                            <TabsTrigger value="queue" className="flex items-center gap-2">
-                                <Users className="w-5 h-5" /> Queue
-                            </TabsTrigger>
-                        </TabsList>
+                    {/* This extra div is a structural change to force a full re-render */}
+                    <div>
+                        <Tabs value={customerTab} onValueChange={setCustomerTab} className="w-full">
+                            <TabsList className="w-full grid grid-cols-3 h-14 text-base">
+                                <TabsTrigger value="order" className="flex items-center gap-2">
+                                    <Coffee className="w-5 h-5" /> Place Order
+                                </TabsTrigger>
+                                <TabsTrigger value="status" className="flex items-center gap-2">
+                                    <Clock className="w-5 h-5" /> Order Status
+                                </TabsTrigger>
+                                <TabsTrigger value="queue" className="flex items-center gap-2">
+                                    <Users className="w-5 h-5" /> Queue
+                                </TabsTrigger>
+                            </TabsList>
 
-                        <div className="mt-8 min-h-[250px]">
-                            {error && (
-                                <Alert variant="destructive" className="mb-4">
-                                    <AlertDescription>{error}</AlertDescription>
-                                </Alert>
-                            )}
-                            <TabsContent value="order" className="mt-0">
-                                {showCancelAlert && (
-                                    <Alert className="bg-green-50 border-green-200 mb-4">
-                                        <AlertDescription className="text-green-800">
-                                            Order cancelled successfully!
-                                        </AlertDescription>
+                            <div className="mt-8 min-h-[250px]">
+                                {error && (
+                                    <Alert variant="destructive" className="mb-4">
+                                        <AlertDescription>{error}</AlertDescription>
                                     </Alert>
                                 )}
-                                <OrderForm onOrder={handleOrder} isLoading={isLoading} />
-                            </TabsContent>
+                                <TabsContent value="order" className="mt-0">
+                                    {showCancelAlert && (
+                                        <Alert className="bg-green-50 border-green-200 mb-4">
+                                            <AlertDescription className="text-green-800">
+                                                Order cancelled successfully!
+                                            </AlertDescription>
+                                        </Alert>
+                                    )}
+                                    <OrderForm onOrder={handleOrder} isLoading={isLoading} />
+                                </TabsContent>
 
-                            <TabsContent value="status" className="mt-0">
-                                {/* Trivial change to force a rebuild */}
-                                {isLoading && !myOrder ? (
-                                    <p className="text-center text-gray-500 pt-8">Loading Orders...</p>
-                                ) : myOrder ? (
-                                    <CustomerOrderStatus
-                                        order={myOrder}
-                                        onCancelOrder={cancelOrder}
-                                        onMarkCollected={handleMarkCollected}
-                                    />
-                                ) : (
-                                    <p className="text-center text-gray-500 pt-8">
-                                        Your order status will appear here once you've placed an order.
-                                    </p>
-                                )}
-                            </TabsContent>
+                                <TabsContent value="status" className="mt-0">
+                                    {isLoading && !myOrder ? (
+                                        <p className="text-center text-gray-500 pt-8">Loading Orders...</p>
+                                    ) : myOrder ? (
+                                        <CustomerOrderStatus
+                                            order={myOrder}
+                                            onCancelOrder={cancelOrder}
+                                            onMarkCollected={handleMarkCollected}
+                                        />
+                                    ) : (
+                                        <p className="text-center text-gray-500 pt-8">
+                                            Your order status will appear here once you've placed an order.
+                                        </p>
+                                    )}
+                                </TabsContent>
 
-                            <TabsContent value="queue" className="mt-0">
-                                <QueueView orders={allOrders} customerOrderId={customerOrderId} />
-                            </TabsContent>
-                        </div>
-                    </Tabs>
+                                <TabsContent value="queue" className="mt-0">
+                                    <QueueView orders={allOrders} customerOrderId={customerOrderId} />
+                                </TabsContent>
+                            </div>
+                        </Tabs>
+                    </div>
                 </CardContent>
             </Card>
         </div>
