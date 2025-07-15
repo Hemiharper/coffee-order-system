@@ -147,7 +147,7 @@ export default function HomePage() {
                     <CardTitle className="flex items-center justify-between text-2xl sm:text-3xl font-bold">
                         <div className="flex items-center gap-3">
                             <Coffee className="w-7 h-7 sm:w-8 sm:h-8" />
-                            Big Brews
+                            Big Brews TEST
                         </div>
                     </CardTitle>
                 </CardHeader>
