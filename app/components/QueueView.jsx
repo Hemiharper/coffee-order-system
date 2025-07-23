@@ -2,17 +2,17 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/app/components/ui/card';
-import { User, Coffee, MapPin, CheckCircle } from 'lucide-react';
+import { User, Coffee, MapPin, CheckCircle, Check } from 'lucide-react';
+import { Button } from '@/app/components/ui/button';
 
-const QueueView = ({ orders, customerOrderId }) => {
-  // Filter orders into "Ready" and "Pending" lists
+// The component now accepts onMarkCollected and isUpdating props
+const QueueView = ({ orders, customerOrderId, onMarkCollected, isUpdating }) => {
   const readyOrders = orders
     .filter(order => order.Status === 'Ready' && order['Collection Spot'])
-    .sort((a, b) => a['Collection Spot'] - b['Collection Spot']); // Sort by spot number
+    .sort((a, b) => a['Collection Spot'] - b['Collection Spot']);
 
   const pendingOrders = orders.filter(order => order.Status === 'Pending');
 
-  // Check if there are any orders to display at all
   if (readyOrders.length === 0 && pendingOrders.length === 0) {
     return (
       <div className="text-center py-16">
@@ -25,7 +25,6 @@ const QueueView = ({ orders, customerOrderId }) => {
 
   return (
     <div className="space-y-6">
-      {/* Section for orders ready for collection */}
       {readyOrders.length > 0 && (
         <div>
           <h3 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
@@ -36,24 +35,33 @@ const QueueView = ({ orders, customerOrderId }) => {
             <CardContent className="p-0">
               <ul className="divide-y divide-gray-200">
                 {readyOrders.map((order) => {
-                  const isMyOrder = order.id === customerOrderId;
+                  const isMyOrder = customerOrderId && order.id === customerOrderId;
                   return (
                     <li
                       key={order.id}
                       className={`flex items-center justify-between p-4 ${isMyOrder ? 'bg-blue-50' : ''}`}
                     >
                       <div className="flex items-center gap-4">
-                        <div className="flex items-center justify-center bg-blue-100 text-blue-800 rounded-full w-10 h-10">
-                            <MapPin className="w-5 h-5" />
+                        <div className="flex items-center justify-center bg-blue-100 text-blue-800 rounded-full w-12 h-12">
+                            <MapPin className="w-6 h-6" />
                         </div>
                         <div>
-                            <span className="font-medium text-gray-800">{order.Name}</span>
-                            {isMyOrder && <span className="text-xs text-blue-600 font-semibold ml-2">This is you!</span>}
+                            <span className="font-medium text-lg text-gray-800">{order.Name}</span>
+                            <p className="text-sm text-gray-500">Spot #{order['Collection Spot']}</p>
                         </div>
                       </div>
-                      <div className="text-lg font-bold text-gray-700">
-                        Spot #{order['Collection Spot']}
-                      </div>
+                      {/* === CHANGE IS HERE: Added the "Mark as Collected" button === */}
+                      {/* The button is only shown if the onMarkCollected function is provided */}
+                      {onMarkCollected && (
+                        <Button
+                          onClick={() => onMarkCollected(order.id)}
+                          disabled={isUpdating}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <Check className="mr-2 h-4 w-4" />
+                          Collected
+                        </Button>
+                      )}
                     </li>
                   );
                 })}
@@ -63,7 +71,6 @@ const QueueView = ({ orders, customerOrderId }) => {
         </div>
       )}
 
-      {/* Section for orders waiting in the queue */}
       {pendingOrders.length > 0 && (
         <div>
           <h3 className="text-xl font-bold text-gray-800 mb-3">In the Queue</h3>
@@ -71,14 +78,14 @@ const QueueView = ({ orders, customerOrderId }) => {
             <CardContent className="p-0">
               <ul className="divide-y divide-gray-200">
                 {pendingOrders.map((order, index) => {
-                  const isMyOrder = order.id === customerOrderId;
+                  const isMyOrder = customerOrderId && order.id === customerOrderId;
                   return (
                     <li
                       key={order.id}
                       className={`flex items-center justify-between p-4 ${isMyOrder ? 'bg-blue-50' : ''}`}
                     >
                       <div className="flex items-center gap-4">
-                        <span className={`text-lg font-bold w-10 text-center ${isMyOrder ? 'text-blue-600' : 'text-gray-500'}`}>
+                        <span className={`text-lg font-bold w-12 text-center ${isMyOrder ? 'text-blue-600' : 'text-gray-500'}`}>
                           {index + 1}
                         </span>
                         <div className="flex items-center gap-2">
