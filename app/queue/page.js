@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/app/components/ui/card';
 import { Coffee, Loader2 } from 'lucide-react';
-import QueueView from '@/app/components/QueueView'; // We will update this component next
+import QueueView from '@/app/components/QueueView';
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
 
 export default function PublicQueuePage() {
@@ -14,11 +14,11 @@ export default function PublicQueuePage() {
     const [isUpdating, setIsUpdating] = useState(false);
     const [error, setError] = useState(null);
 
-    // Fetching logic, similar to the barista and customer pages
     const fetchOrders = useCallback(async () => {
-        // Don't show main loader during polling
-        if (!isLoading) setIsLoading(true); 
-        setError(null);
+        // Set loading to true only for the initial fetch, not for background polling
+        if (isLoading) {
+            setError(null);
+        }
         try {
             const response = await fetch('/api/orders', { cache: 'no-store' });
             if (!response.ok) {
@@ -33,17 +33,14 @@ export default function PublicQueuePage() {
         } finally {
             setIsLoading(false);
         }
-    }, [isLoading]); // Dependency ensures loader state is managed correctly
+    }, [isLoading]);
 
-    // Effect for initial load and polling
     useEffect(() => {
         fetchOrders();
-        // Use a fast polling rate for a real-time feel on the tablet
         const interval = setInterval(fetchOrders, 3000); 
         return () => clearInterval(interval);
     }, [fetchOrders]);
 
-    // Handler for the "Mark as Collected" button
     const handleMarkCollected = async (orderId) => {
         setIsUpdating(true);
         setError(null);
@@ -55,7 +52,6 @@ export default function PublicQueuePage() {
             });
 
             if (response.ok) {
-                // Refresh the order list immediately after a successful update
                 await fetchOrders();
             } else {
                 const errorData = await response.json();
@@ -70,8 +66,9 @@ export default function PublicQueuePage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 p-3 sm:p-6">
-            <Card className="w-full max-w-4xl mx-auto bg-white shadow-lg">
+        // === CHANGE IS HERE: Updated background and card styles ===
+        <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 p-3 sm:p-6">
+            <Card className="w-full max-w-4xl mx-auto bg-white/95 backdrop-blur-sm shadow-xl">
                 <CardHeader className="pb-6">
                     <CardTitle className="flex items-center justify-center gap-3 text-2xl sm:text-3xl font-bold">
                         <Coffee className="w-7 h-7 sm:w-8 sm:h-8" />
@@ -91,9 +88,7 @@ export default function PublicQueuePage() {
                     ) : (
                         <QueueView
                             orders={orders}
-                            // Pass the handler down to the QueueView component
                             onMarkCollected={handleMarkCollected}
-                            // Pass the updating state to disable buttons during an action
                             isUpdating={isUpdating}
                         />
                     )}
