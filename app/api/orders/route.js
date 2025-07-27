@@ -27,24 +27,27 @@ export async function OPTIONS(request) {
 
 export async function GET(request) {
   try {
-    const base = getAirtableBase();
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     const filterFormula = `OR(Status != 'Collected', AND(Status = 'Collected', {Collected Timestamp} > '${fiveMinutesAgo}'))`;
 
-    // === CHANGE IS HERE: Added Vercel's Data Cache ===
-    // By using the native `fetch` and the `next: { revalidate: 3 }` option, we tell Vercel
-    // to cache the response from Airtable for 3 seconds. This dramatically reduces the
+    // By using the native `fetch` and the `next: { revalidate: 10 }` option, we tell Vercel
+    // to cache the response from Airtable. This dramatically reduces the
     // number of direct API calls to Airtable.
     const response = await fetch(`https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/Orders?sort%5B0%5D%5Bfield%5D=Order+Timestamp&sort%5B0%5D%5Bdirection%5D=asc&filterByFormula=${encodeURIComponent(filterFormula)}`, {
       headers: {
         Authorization: `Bearer ${process.env.AIRTABLE_API_KEY}`,
       },
       next: {
-        revalidate: 3, // Cache the response for 3 seconds
+        // === CHANGE IS HERE: Increased cache time ===
+        revalidate: 10, // Cache the response for 10 seconds
       },
     });
 
     if (!response.ok) {
+        // Throw a more specific error if we get a rate limit response
+        if (response.status === 429) {
+            throw new Error('Airtable rate limit exceeded. Please wait a moment and try again.');
+        }
         throw new Error(`Airtable API responded with status ${response.status}`);
     }
 
@@ -53,7 +56,6 @@ export async function GET(request) {
       id: record.id,
       ...record.fields
     }));
-    // === END OF CHANGE ===
 
     return NextResponse.json(orders, { status: 200, headers: corsHeaders });
 
