@@ -31,15 +31,29 @@ export async function GET(request) {
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     const filterFormula = `OR(Status != 'Collected', AND(Status = 'Collected', {Collected Timestamp} > '${fiveMinutesAgo}'))`;
 
-    const records = await base('Orders').select({
-      sort: [{ field: "Order Timestamp", direction: "asc" }],
-      filterByFormula: filterFormula,
-    }).all();
+    // === CHANGE IS HERE: Added Vercel's Data Cache ===
+    // By using the native `fetch` and the `next: { revalidate: 3 }` option, we tell Vercel
+    // to cache the response from Airtable for 3 seconds. This dramatically reduces the
+    // number of direct API calls to Airtable.
+    const response = await fetch(`https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/Orders?sort%5B0%5D%5Bfield%5D=Order+Timestamp&sort%5B0%5D%5Bdirection%5D=asc&filterByFormula=${encodeURIComponent(filterFormula)}`, {
+      headers: {
+        Authorization: `Bearer ${process.env.AIRTABLE_API_KEY}`,
+      },
+      next: {
+        revalidate: 3, // Cache the response for 3 seconds
+      },
+    });
 
-    const orders = records.map(record => ({
+    if (!response.ok) {
+        throw new Error(`Airtable API responded with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    const orders = data.records.map(record => ({
       id: record.id,
       ...record.fields
     }));
+    // === END OF CHANGE ===
 
     return NextResponse.json(orders, { status: 200, headers: corsHeaders });
 
@@ -130,8 +144,6 @@ export async function PATCH(request) {
             }
         }
         
-        // === CHANGE IS HERE ===
-        // The spot is now only cleared if an order is moved back to "Pending".
         if (newStatus === 'Pending') {
             fieldsToUpdate['Collection Spot'] = null;
         }
