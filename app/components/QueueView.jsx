@@ -50,16 +50,16 @@ const QueueView = ({ orders, customerOrderId, onMarkCollected, isUpdating }) => 
                             <p className="text-sm text-gray-500">Spot #{order['Collection Spot']}</p>
                         </div>
                       </div>
-                      {/* === CHANGE IS HERE: Added the "Mark as Collected" button === */}
-                      {/* The button is only shown if the onMarkCollected function is provided */}
+                      {/* === CHANGE IS HERE: Updated button style and text === */}
                       {onMarkCollected && (
                         <Button
                           onClick={() => onMarkCollected(order.id)}
                           disabled={isUpdating}
-                          className="bg-green-600 hover:bg-green-700"
+                          variant="outline" // Use the outline style
+                          className="border-blue-600 text-blue-600 hover:bg-blue-50 hover:text-blue-600"
                         >
                           <Check className="mr-2 h-4 w-4" />
-                          Collected
+                          Mark as Collected
                         </Button>
                       )}
                     </li>
